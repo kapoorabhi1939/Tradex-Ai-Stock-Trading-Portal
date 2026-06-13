@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+.tools/
+.logs/
+node_modules/
+.next/
+dist/
+coverage/
+documentary_build/
+documentary_media/
+*.mp4
+*.m4a
