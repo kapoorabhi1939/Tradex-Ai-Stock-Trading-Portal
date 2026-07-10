@@ -608,6 +608,16 @@ select:focus {
   font-weight: 900;
 }
 
+.sso-button {
+  display: grid;
+  height: 46px;
+  place-items: center;
+  border: 1px solid rgba(24, 33, 43, 0.12);
+  border-radius: 16px;
+  background: transparent;
+  font-weight: 900;
+}
+
 .app-screen {
   display: none;
   grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
@@ -1377,4 +1387,21 @@ body.figma-single.figma-portfolio [data-screen="portfolio"],
 body.figma-single.figma-alerts [data-screen="alerts"] {
   display: grid;
   grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+}
+
+body.figma-single.figma-login [data-screen="login"] {
+  width: 1440px;
+  min-height: 900px;
+}
+
+body.figma-single.figma-login .auth-layout {
+  width: 1180px;
+  min-width: 1180px;
+  min-height: 760px;
+  grid-template-columns: 1fr 460px !important;
+}
+
+body.figma-single.figma-login .auth-story,
+body.figma-single.figma-login .auth-card {
+  min-width: 0;
 }
