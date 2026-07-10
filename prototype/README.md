@@ -61,3 +61,26 @@ Important: keep `Add hyperlinks` off. The local prototype uses hash routes like 
 ## Product Positioning
 
 The copy intentionally frames Tradex AI as a decision-support platform. It avoids autonomous trading claims, guaranteed prediction language, or order execution flows.
+
+## Importing Separate Figma Frames
+
+If `index.html` imports as one long vertical page, use the single-screen import files instead. Import each screen one at a time with the same `styles.css` file:
+
+1. `01-landing.html` + `styles.css`
+2. `02-login.html` + `styles.css`
+3. `03-dashboard.html` + `styles.css`
+4. `04-symbol-detail.html` + `styles.css`
+5. `05-portfolio-analysis.html` + `styles.css`
+6. `06-alerts-center.html` + `styles.css`
+
+Recommended html.to.design settings stay the same:
+
+- `Use Autolayout`: on
+- `Create styles & variables`: on
+- `Use existing local styles`: off
+- `For hover effects`: off
+- `High-res images`: off
+- `Add hyperlinks`: off
+- `HTML layer names`: on
+
+After all six screens are imported, arrange them horizontally in Figma and manually wire the prototype flow. Do not use imported hyperlinks for this project because local hash links can open extra Figma/browser tabs instead of creating clean prototype connections.

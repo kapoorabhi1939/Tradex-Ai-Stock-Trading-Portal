@@ -1347,3 +1347,34 @@ body.no-js .login-screen {
     radial-gradient(circle at 10% 6%, rgba(37, 170, 160, 0.16), transparent 34%),
     linear-gradient(135deg, #f7f9f5, #edf3f1 46%, #e2ebe8);
 }
+
+/* Single-screen Figma imports: use these with 01-landing.html through 06-alerts.html. */
+body.figma-single {
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 40px;
+  background: #dfe8e5;
+}
+
+body.figma-single .screen {
+  display: none;
+  margin: 0;
+}
+
+body.figma-single.figma-landing [data-screen="landing"],
+body.figma-single.figma-login [data-screen="login"],
+body.figma-single.figma-dashboard [data-screen="dashboard"],
+body.figma-single.figma-symbol [data-screen="symbol"],
+body.figma-single.figma-portfolio [data-screen="portfolio"],
+body.figma-single.figma-alerts [data-screen="alerts"] {
+  display: block;
+}
+
+body.figma-single.figma-dashboard [data-screen="dashboard"],
+body.figma-single.figma-symbol [data-screen="symbol"],
+body.figma-single.figma-portfolio [data-screen="portfolio"],
+body.figma-single.figma-alerts [data-screen="alerts"] {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+}

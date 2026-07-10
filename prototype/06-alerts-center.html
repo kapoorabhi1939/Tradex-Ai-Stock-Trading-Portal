@@ -1,0 +1,577 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tradex AI Alerts Figma Import</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="no-js figma-single figma-alerts">
+    <div class="prototype-toolbar" aria-label="Prototype navigation">
+      <a class="brand-mark" href="#landing" data-route="landing" aria-label="Tradex home">
+        <span>TX</span>
+        <strong>Tradex AI</strong>
+      </a>
+      <nav>
+        <a href="#landing" data-route="landing">Landing</a>
+        <a href="#login" data-route="login">Login</a>
+        <a href="#dashboard" data-route="dashboard">Dashboard</a>
+        <a href="#symbol" data-route="symbol">Symbol</a>
+        <a href="#portfolio" data-route="portfolio">Portfolio</a>
+        <a href="#alerts" data-route="alerts">Alerts</a>
+      </nav>
+      <span class="toolbar-note">Local HTML/CSS prototype</span>
+    </div>
+
+    <main id="app">
+      <section class="screen landing-screen is-active" data-screen="landing" aria-labelledby="landing-title">
+        <header class="marketing-nav">
+          <a class="logo" href="#landing" data-route="landing">
+            <span>TX</span>
+            <strong>Tradex AI</strong>
+          </a>
+          <nav>
+            <a href="#dashboard" data-route="dashboard">Platform</a>
+            <a href="#symbol" data-route="symbol">Signals</a>
+            <a href="#portfolio" data-route="portfolio">Risk</a>
+            <a href="#alerts" data-route="alerts">Alerts</a>
+          </nav>
+          <div class="nav-actions">
+            <a class="ghost-link" href="#login" data-route="login">Sign in</a>
+            <a class="button button-primary" href="#login" data-route="login">Request demo</a>
+          </div>
+        </header>
+
+        <div class="hero-grid">
+          <div class="hero-copy reveal">
+            <p class="eyebrow">Decision support for US equities</p>
+            <h1 id="landing-title">AI signals with real market context.</h1>
+            <p class="hero-subcopy">
+              Discover stocks, understand sentiment, inspect signal confidence, and monitor portfolio risk in one calm analytical workspace.
+            </p>
+            <div class="hero-actions">
+              <a class="button button-primary button-large" href="#login" data-route="login">Get started</a>
+              <a class="button button-outline button-large" href="#dashboard" data-route="dashboard">View dashboard</a>
+            </div>
+            <div class="cred-row" aria-label="Product credibility notes">
+              <span>Delayed and minute-level data</span>
+              <span>Explainable signal drivers</span>
+              <span>Educational analysis only</span>
+            </div>
+          </div>
+
+          <div class="hero-product reveal delay-1" aria-label="Product preview">
+            <div class="product-shell">
+              <div class="mini-topbar">
+                <span></span><span></span><span></span>
+                <strong>Market Pulse</strong>
+              </div>
+              <div class="preview-grid">
+                <article class="preview-card preview-chart">
+                  <div>
+                    <p class="label">NVDA</p>
+                    <h3>$128.44 <span>+2.8%</span></h3>
+                  </div>
+                  <svg viewBox="0 0 360 150" role="img" aria-label="Upward price chart">
+                    <path class="chart-area" d="M0 118 C42 88 70 105 105 70 C138 36 166 73 205 50 C242 28 275 50 316 20 C342 2 358 18 360 14 L360 150 L0 150 Z" />
+                    <path class="chart-line" d="M0 118 C42 88 70 105 105 70 C138 36 166 73 205 50 C242 28 275 50 316 20 C342 2 358 18 360 14" />
+                  </svg>
+                </article>
+                <article class="preview-card dark-card">
+                  <p class="label">AI signal</p>
+                  <div class="signal-row">
+                    <span class="chip chip-bullish">Bullish</span>
+                    <span class="confidence">81%</span>
+                  </div>
+                  <p>Momentum and volume expansion are stronger than the 20-day baseline.</p>
+                </article>
+                <article class="preview-card">
+                  <p class="label">Portfolio risk</p>
+                  <h3>Moderate</h3>
+                  <div class="risk-bars">
+                    <span style="--w: 72%"></span>
+                    <span style="--w: 48%"></span>
+                    <span style="--w: 61%"></span>
+                  </div>
+                </article>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature-card">
+            <span class="feature-icon">01</span>
+            <h2>Explainable signals</h2>
+            <p>Each output includes direction, confidence, horizon, timestamp, and the features behind the recommendation.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon">02</span>
+            <h2>News sentiment</h2>
+            <p>Summaries compress recent headlines into a readable score and plain-English market context.</p>
+          </article>
+          <article class="feature-card">
+            <span class="feature-icon">03</span>
+            <h2>Portfolio guardrails</h2>
+            <p>Analyze concentration, sector exposure, volatility proxy, and diversification warnings before making decisions.</p>
+          </article>
+        </div>
+
+        <footer class="landing-footer">
+          <strong>Tradex AI is a demo decision-support platform.</strong>
+          <span>Outputs are educational and analytical, not guaranteed financial advice or automated trade execution.</span>
+        </footer>
+      </section>
+
+      <section class="screen login-screen" data-screen="login" aria-labelledby="login-title">
+        <div class="auth-layout">
+          <aside class="auth-story">
+            <a class="logo logo-light" href="#landing" data-route="landing">
+              <span>TX</span>
+              <strong>Tradex AI</strong>
+            </a>
+            <div>
+              <p class="eyebrow gold">Secure research workspace</p>
+              <h1 id="login-title">Your watchlist, signals, risk, and alerts in one place.</h1>
+              <p>
+                Start from a saved watchlist, inspect the reasoning behind each signal, then decide what deserves deeper research.
+              </p>
+            </div>
+            <div class="auth-preview-card">
+              <div class="signal-row">
+                <span class="chip chip-bullish">Bullish</span>
+                <span class="confidence">78%</span>
+              </div>
+              <h3>AAPL momentum improving</h3>
+              <p>Generated 10:45 AM ET from trend, volume, volatility, and sentiment features.</p>
+            </div>
+          </aside>
+          <form class="auth-card" data-login-form>
+            <p class="eyebrow">Welcome back</p>
+            <h2>Sign in to Tradex AI</h2>
+            <label>
+              Email
+              <input type="email" value="abhi@example.com" autocomplete="email" />
+            </label>
+            <label>
+              Password
+              <input type="password" value="tradex-demo" autocomplete="current-password" />
+            </label>
+            <button class="button button-primary button-full" type="submit">Sign in</button>
+            <div class="sso-row">
+              <button type="button">Google</button>
+              <button type="button">GitHub</button>
+            </div>
+            <p class="fine-print">
+              By continuing, you acknowledge this demo provides educational market analytics only and does not place trades.
+            </p>
+            <p class="switch-copy">New here? <a href="#landing" data-route="landing">Request access</a></p>
+          </form>
+        </div>
+      </section>
+
+      <section class="screen app-screen" data-screen="dashboard" aria-labelledby="dashboard-title">
+        <aside class="sidebar">
+          <a class="logo logo-light" href="#dashboard" data-route="dashboard">
+            <span>TX</span>
+            <strong>Tradex AI</strong>
+          </a>
+          <nav class="side-nav">
+            <a class="is-selected" href="#dashboard" data-route="dashboard">Dashboard</a>
+            <a href="#symbol" data-route="symbol">Research</a>
+            <a href="#portfolio" data-route="portfolio">Portfolio</a>
+            <a href="#alerts" data-route="alerts">Alerts</a>
+            <a href="#landing" data-route="landing">Public site</a>
+          </nav>
+          <div class="sidebar-callout">
+            <p class="label">Session</p>
+            <strong>Market open</strong>
+            <span>Data delayed 15 min</span>
+          </div>
+        </aside>
+
+        <div class="app-content dashboard-grid">
+          <header class="app-header">
+            <div>
+              <p class="eyebrow">Thursday, June 25</p>
+              <h1 id="dashboard-title">Market command center</h1>
+            </div>
+            <div class="header-actions">
+              <button class="button button-outline">Import holdings</button>
+              <button class="button button-primary">Create alert</button>
+            </div>
+          </header>
+
+          <section class="panel watchlist-panel">
+            <div class="panel-heading">
+              <h2>Watchlist</h2>
+              <button class="text-button">Add ticker</button>
+            </div>
+            <a class="watch-row" href="#symbol" data-route="symbol">
+              <span class="ticker">AAPL</span>
+              <span>$214.28</span>
+              <span class="positive">+1.2%</span>
+              <span class="chip chip-bullish">Bullish</span>
+            </a>
+            <a class="watch-row" href="#symbol" data-route="symbol">
+              <span class="ticker">NVDA</span>
+              <span>$128.44</span>
+              <span class="positive">+2.8%</span>
+              <span class="chip chip-bullish">Bullish</span>
+            </a>
+            <a class="watch-row" href="#symbol" data-route="symbol">
+              <span class="ticker">MSFT</span>
+              <span>$489.10</span>
+              <span class="muted">+0.3%</span>
+              <span class="chip chip-neutral">Neutral</span>
+            </a>
+            <a class="watch-row" href="#symbol" data-route="symbol">
+              <span class="ticker">TSLA</span>
+              <span>$184.62</span>
+              <span class="negative">-1.1%</span>
+              <span class="chip chip-bearish">Bearish</span>
+            </a>
+          </section>
+
+          <section class="panel chart-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="label">Selected ticker</p>
+                <h2>AAPL <span>Apple Inc.</span></h2>
+              </div>
+              <div class="filter-pills">
+                <button>1D</button><button class="active">1W</button><button>1M</button><button>1Y</button>
+              </div>
+            </div>
+            <div class="big-chart" aria-label="AAPL price chart">
+              <svg viewBox="0 0 760 310">
+                <defs>
+                  <linearGradient id="goldFade" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stop-color="#25AAA0" stop-opacity="0.35" />
+                    <stop offset="100%" stop-color="#25AAA0" stop-opacity="0" />
+                  </linearGradient>
+                </defs>
+                <path class="grid-line" d="M0 70 H760 M0 145 H760 M0 220 H760" />
+                <path class="chart-area" fill="url(#goldFade)" d="M0 245 C58 210 88 234 148 176 C212 115 264 168 324 132 C380 98 421 122 476 84 C544 38 598 82 652 48 C708 13 748 39 760 26 L760 310 L0 310 Z" />
+                <path class="chart-line" d="M0 245 C58 210 88 234 148 176 C212 115 264 168 324 132 C380 98 421 122 476 84 C544 38 598 82 652 48 C708 13 748 39 760 26" />
+              </svg>
+            </div>
+          </section>
+
+          <section class="panel signal-panel">
+            <div class="panel-heading">
+              <h2>AI signal</h2>
+              <span class="timestamp">10:45 AM ET</span>
+            </div>
+            <div class="signal-row">
+              <span class="chip chip-bullish">Bullish</span>
+              <span class="confidence">82% confidence</span>
+            </div>
+            <p>
+              Short-horizon momentum improved after volume moved above the 20-day baseline while volatility stayed controlled.
+            </p>
+            <div class="driver-list">
+              <span>MA crossover</span>
+              <span>Volume expansion</span>
+              <span>Positive news tone</span>
+            </div>
+          </section>
+
+          <a class="panel risk-panel clickable-panel" href="#portfolio" data-route="portfolio">
+            <div class="panel-heading">
+              <h2>Portfolio risk</h2>
+              <span class="risk-score">64</span>
+            </div>
+            <p>Moderate concentration in mega-cap technology. Consider reviewing sector balance before adding new exposure.</p>
+            <div class="risk-meter"><span style="--w:64%"></span></div>
+          </a>
+
+          <section class="panel sentiment-panel">
+            <div class="panel-heading">
+              <h2>News sentiment</h2>
+              <span class="sentiment-badge">Positive 0.41</span>
+            </div>
+            <p>14 headlines reviewed. Product cycle coverage and analyst revisions are driving the current positive tone.</p>
+            <article class="news-item">
+              <span>8 min ago</span>
+              <strong>Analysts lift expectations after services growth update</strong>
+            </article>
+          </section>
+
+          <a class="panel alerts-panel clickable-panel" href="#alerts" data-route="alerts">
+            <div class="panel-heading">
+              <h2>Alerts preview</h2>
+              <span class="notification-dot"></span>
+            </div>
+            <p>3 active alerts. NVDA price threshold and AAPL confidence change are being monitored.</p>
+            <div class="alert-mini-row">
+              <span>AAPL confidence below 65%</span>
+              <strong>Enabled</strong>
+            </div>
+          </a>
+        </div>
+      </section>
+
+      <section class="screen app-screen" data-screen="symbol" aria-labelledby="symbol-title">
+        <aside class="sidebar">
+          <a class="logo logo-light" href="#dashboard" data-route="dashboard">
+            <span>TX</span>
+            <strong>Tradex AI</strong>
+          </a>
+          <nav class="side-nav">
+            <a href="#dashboard" data-route="dashboard">Dashboard</a>
+            <a class="is-selected" href="#symbol" data-route="symbol">Research</a>
+            <a href="#portfolio" data-route="portfolio">Portfolio</a>
+            <a href="#alerts" data-route="alerts">Alerts</a>
+          </nav>
+        </aside>
+
+        <div class="app-content symbol-layout">
+          <header class="app-header symbol-header">
+            <div>
+              <p class="eyebrow">Technology | Consumer electronics</p>
+              <h1 id="symbol-title">AAPL <span>Apple Inc.</span></h1>
+            </div>
+            <div class="price-block">
+              <strong>$214.28</strong>
+              <span class="positive">+1.2% today</span>
+            </div>
+          </header>
+
+          <section class="panel research-chart">
+            <div class="panel-heading">
+              <h2>Price movement</h2>
+              <div class="filter-pills">
+                <button>1D</button><button class="active">1W</button><button>1M</button><button>6M</button>
+              </div>
+            </div>
+            <div class="candles" aria-label="Price and volume visualization">
+              <span style="--h:45%;--c:#2D8C63"></span>
+              <span style="--h:55%;--c:#2D8C63"></span>
+              <span style="--h:34%;--c:#C04F4F"></span>
+              <span style="--h:62%;--c:#2D8C63"></span>
+              <span style="--h:74%;--c:#2D8C63"></span>
+              <span style="--h:50%;--c:#C04F4F"></span>
+              <span style="--h:84%;--c:#2D8C63"></span>
+              <span style="--h:69%;--c:#2D8C63"></span>
+              <span style="--h:88%;--c:#2D8C63"></span>
+              <span style="--h:76%;--c:#C04F4F"></span>
+              <span style="--h:92%;--c:#2D8C63"></span>
+            </div>
+          </section>
+
+          <section class="panel detail-signal">
+            <div class="panel-heading">
+              <h2>Signal explanation</h2>
+              <span class="timestamp">Generated 10:45 AM ET</span>
+            </div>
+            <div class="signal-row">
+              <span class="chip chip-bullish">Bullish</span>
+              <span class="confidence">82% confidence</span>
+            </div>
+            <p>
+              The model classifies the next 5 trading sessions as positive probability. The strongest drivers are momentum acceleration, stable realized volatility, and constructive headline sentiment.
+            </p>
+            <div class="feature-drivers">
+              <div><strong>+18%</strong><span>Relative volume</span></div>
+              <div><strong>5 day</strong><span>Signal horizon</span></div>
+              <div><strong>0.41</strong><span>Sentiment score</span></div>
+            </div>
+          </section>
+
+          <section class="panel metrics-strip">
+            <div><span>Market cap</span><strong>$3.29T</strong></div>
+            <div><span>Beta</span><strong>1.18</strong></div>
+            <div><span>Avg volume</span><strong>58.2M</strong></div>
+            <div><span>Volatility proxy</span><strong>Low</strong></div>
+          </section>
+
+          <section class="panel news-panel">
+            <div class="panel-heading">
+              <h2>Recent news</h2>
+              <span class="sentiment-badge">14 headlines</span>
+            </div>
+            <article class="news-item">
+              <span>8 min ago</span>
+              <strong>Services growth update supports analyst confidence</strong>
+              <p>Coverage remains constructive, with attention on margin durability.</p>
+            </article>
+            <article class="news-item">
+              <span>28 min ago</span>
+              <strong>Supply chain notes point to stable device demand</strong>
+              <p>Headlines are mixed but not materially negative for near-term sentiment.</p>
+            </article>
+          </section>
+
+          <section class="panel compare-panel">
+            <div class="panel-heading">
+              <h2>Related tickers</h2>
+            </div>
+            <div class="compare-list">
+              <span>MSFT</span>
+              <span>AMZN</span>
+              <span>NVDA</span>
+              <span>GOOGL</span>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="screen app-screen" data-screen="portfolio" aria-labelledby="portfolio-title">
+        <aside class="sidebar">
+          <a class="logo logo-light" href="#dashboard" data-route="dashboard">
+            <span>TX</span>
+            <strong>Tradex AI</strong>
+          </a>
+          <nav class="side-nav">
+            <a href="#dashboard" data-route="dashboard">Dashboard</a>
+            <a href="#symbol" data-route="symbol">Research</a>
+            <a class="is-selected" href="#portfolio" data-route="portfolio">Portfolio</a>
+            <a href="#alerts" data-route="alerts">Alerts</a>
+          </nav>
+        </aside>
+
+        <div class="app-content portfolio-layout">
+          <header class="app-header">
+            <div>
+              <p class="eyebrow">Portfolio analysis</p>
+              <h1 id="portfolio-title">Risk, exposure, and rebalance ideas</h1>
+            </div>
+            <button class="button button-primary">Upload holdings</button>
+          </header>
+
+          <section class="panel holdings-card">
+            <div class="panel-heading">
+              <h2>Holdings input</h2>
+              <span class="timestamp">Snapshot updated 10:52 AM ET</span>
+            </div>
+            <div class="holding-row header"><span>Ticker</span><span>Weight</span><span>Signal</span><span>Risk note</span></div>
+            <div class="holding-row"><span>AAPL</span><span>28%</span><span class="chip chip-bullish">Bullish</span><span>Large position</span></div>
+            <div class="holding-row"><span>NVDA</span><span>22%</span><span class="chip chip-bullish">Bullish</span><span>High volatility</span></div>
+            <div class="holding-row"><span>MSFT</span><span>18%</span><span class="chip chip-neutral">Neutral</span><span>Core tech exposure</span></div>
+            <div class="holding-row"><span>AMZN</span><span>14%</span><span class="chip chip-neutral">Neutral</span><span>Consumer overlap</span></div>
+          </section>
+
+          <section class="panel allocation-card">
+            <div class="panel-heading">
+              <h2>Allocation</h2>
+            </div>
+            <div class="donut" aria-label="Portfolio allocation donut"></div>
+            <div class="legend">
+              <span><i class="gold-dot"></i> Technology 68%</span>
+              <span><i class="green-dot"></i> Consumer 20%</span>
+              <span><i class="blue-dot"></i> Cash 12%</span>
+            </div>
+          </section>
+
+          <section class="panel concentration-card">
+            <p class="label">Concentration score</p>
+            <strong>72 / 100</strong>
+            <p>Top two positions represent 50% of the portfolio. Review downside impact before adding similar exposure.</p>
+          </section>
+
+          <section class="panel risk-flags-card">
+            <div class="panel-heading">
+              <h2>Risk flags</h2>
+            </div>
+            <div class="flag-list">
+              <span class="risk-flag">Technology concentration</span>
+              <span class="risk-flag">High single-name exposure</span>
+              <span class="risk-flag">Correlation warning</span>
+            </div>
+          </section>
+
+          <section class="panel suggestions-card">
+            <div class="panel-heading">
+              <h2>Rebalance suggestions</h2>
+            </div>
+            <ul class="suggestions-list">
+              <li>Reduce portfolio sensitivity by reviewing total mega-cap technology weight.</li>
+              <li>Consider adding non-correlated sectors before increasing AAPL or NVDA exposure.</li>
+              <li>Set downside alerts for positions with elevated volatility.</li>
+            </ul>
+          </section>
+        </div>
+      </section>
+
+      <section class="screen app-screen" data-screen="alerts" aria-labelledby="alerts-title">
+        <aside class="sidebar">
+          <a class="logo logo-light" href="#dashboard" data-route="dashboard">
+            <span>TX</span>
+            <strong>Tradex AI</strong>
+          </a>
+          <nav class="side-nav">
+            <a href="#dashboard" data-route="dashboard">Dashboard</a>
+            <a href="#symbol" data-route="symbol">Research</a>
+            <a href="#portfolio" data-route="portfolio">Portfolio</a>
+            <a class="is-selected" href="#alerts" data-route="alerts">Alerts</a>
+          </nav>
+        </aside>
+
+        <div class="app-content alerts-layout">
+          <header class="app-header">
+            <div>
+              <p class="eyebrow">Monitoring workflow</p>
+              <h1 id="alerts-title">Alerts center</h1>
+            </div>
+            <button class="button button-primary">New alert</button>
+          </header>
+
+          <section class="panel alert-builder">
+            <div class="panel-heading">
+              <h2>Create alert</h2>
+              <span class="sentiment-badge">Preview</span>
+            </div>
+            <div class="builder-grid">
+              <label>Ticker <input value="AAPL" /></label>
+              <label>Condition <select><option>Signal confidence below</option><option>Price above</option><option>Sentiment changes</option></select></label>
+              <label>Threshold <input value="65%" /></label>
+              <label>Delivery <input value="Email + dashboard" /></label>
+            </div>
+            <button class="button button-primary">Save alert rule</button>
+          </section>
+
+          <section class="panel alert-list-card">
+            <div class="panel-heading">
+              <h2>Active alerts</h2>
+              <span class="timestamp">3 enabled</span>
+            </div>
+            <div class="alert-row header"><span>Rule</span><span>Condition</span><span>Channel</span><span>Status</span></div>
+            <div class="alert-row"><span>AAPL confidence</span><span>Below 65%</span><span>Email</span><strong>Enabled</strong></div>
+            <div class="alert-row"><span>NVDA price</span><span>Above $132</span><span>Dashboard</span><strong>Enabled</strong></div>
+            <div class="alert-row"><span>TSLA sentiment</span><span>Turns negative</span><span>Email</span><strong>Enabled</strong></div>
+          </section>
+
+          <section class="panel trigger-card">
+            <div class="panel-heading">
+              <h2>Recent triggered activity</h2>
+            </div>
+            <article class="activity-item">
+              <span>10:21 AM</span>
+              <strong>NVDA moved within 1.4% of price threshold.</strong>
+            </article>
+            <article class="activity-item">
+              <span>9:48 AM</span>
+              <strong>AAPL signal confidence improved from 76% to 82%.</strong>
+            </article>
+          </section>
+
+          <section class="panel delivery-card">
+            <div class="panel-heading">
+              <h2>Delivery methods</h2>
+            </div>
+            <div class="delivery-pills">
+              <span>Email</span>
+              <span>Dashboard</span>
+              <span>Weekly digest</span>
+            </div>
+            <p>SMS and brokerage execution are excluded from this MVP to keep the platform decision-support only.</p>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <div class="toast" data-toast>Prototype route loaded</div>
+</body>
+</html>
+
