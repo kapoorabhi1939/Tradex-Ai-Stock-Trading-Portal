@@ -30,3 +30,9 @@ export function marketMoney(n: number, currency: string, precision?: number) {
     (currency ? " " + currency : "")
   );
 }
+
+export function maskedEmail(email: string) {
+  const [local, domain] = email.split("@");
+  if (!local || !domain) return "Signed-in account";
+  return `${local.slice(0, 1)}•••@${domain}`;
+}

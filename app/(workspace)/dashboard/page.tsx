@@ -13,6 +13,7 @@ import { MarketWorkspace, quotePrice } from "@/components/market-workspace";
 import { Watchlist } from "@/components/watchlist";
 import { money } from "@/lib/format";
 import { symbolKey } from "@/lib/market-data/normalizers";
+import { InsightCard } from "@/components/insight-card";
 export const metadata = { title: "Dashboard" };
 export default async function Dashboard({
   searchParams,
@@ -139,6 +140,21 @@ export default async function Dashboard({
           </Panel>
         </div>
       </div>
+      <section className="dashboard-insight">
+        <SectionTitle
+          title="Tradex Insights"
+          sub="Research practices and editorial market context."
+          href="/insights"
+          link="View insights"
+        />
+        <InsightCard
+          eyebrow="RESEARCH PRACTICE"
+          title="Set the evidence before the alert"
+        >
+          Decide what would confirm or challenge your view, then use a focused
+          alert to revisit it.
+        </InsightCard>
+      </section>
     </>
   );
 }

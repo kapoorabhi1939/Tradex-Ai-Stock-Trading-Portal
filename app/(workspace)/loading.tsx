@@ -1,14 +1,14 @@
-export default function Loading() {
+export default function WorkspaceLoading() {
   return (
-    <div
-      role="status"
-      aria-label="Loading workspace"
-      className="loading-layout"
-    >
+    <div className="workspace-loading" aria-label="Loading workspace">
       <div className="skeleton skeleton-heading" />
-      <div className="skeleton skeleton-card" />
-      <div className="skeleton skeleton-chart" />
-      <span className="muted">Loading your workspace…</span>
+      <div className="workspace-loading-grid">
+        <div className="skeleton skeleton-chart" />
+        <div className="stack">
+          <div className="skeleton skeleton-card" />
+          <div className="skeleton skeleton-card" />
+        </div>
+      </div>
     </div>
   );
 }

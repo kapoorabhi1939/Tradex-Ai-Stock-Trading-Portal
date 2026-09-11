@@ -56,7 +56,7 @@ export function evaluateRule(rule: AlertRule) {
     ? {
         trigger_value: value,
         dataset_version: DATASET_VERSION,
-        message: `${e.ticker}: ${conditions[rule.condition_type]}${rule.threshold === null ? "" : ` ${rule.threshold}`} matched. Demo price $${e.price.toFixed(2)}; ${signal.signal} indication, ${signal.confidence}% confidence.`,
+        message: `${e.ticker}: ${conditions[rule.condition_type]}${rule.threshold === null ? "" : ` ${rule.threshold}`} matched. Reference price $${e.price.toFixed(2)}; ${signal.signal} indication, ${signal.confidence}% confidence.`,
       }
     : null;
 }

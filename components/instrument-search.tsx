@@ -161,7 +161,7 @@ export function InstrumentSearch({ lens = false }: { lens?: boolean }) {
           {!results.length && (
             <p role="status">
               {query.trim().length < 2
-                ? "Search stocks, ETFs, currencies and more."
+                ? "Search U.S. stocks, ETFs and supported markets."
                 : loading
                   ? "Searching…"
                   : error || "No matching instruments."}

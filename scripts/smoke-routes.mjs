@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 const base = process.env.TRADEX_BASE_URL || "http://127.0.0.1:3000";
-for (const path of ["/", "/login", "/icon.svg"]) {
+for (const path of ["/", "/pricing", "/signup", "/login", "/icon.svg"]) {
   const response = await fetch(new URL(path, base), { redirect: "manual" });
   assert.equal(response.status, 200, `${path} should be available`);
   assert.equal(response.headers.get("x-content-type-options"), "nosniff");
@@ -8,6 +8,9 @@ for (const path of ["/", "/login", "/icon.svg"]) {
 }
 for (const path of [
   "/dashboard",
+  "/markets",
+  "/insights",
+  "/admin",
   "/research",
   "/research/NVDA",
   "/research/INVALID",

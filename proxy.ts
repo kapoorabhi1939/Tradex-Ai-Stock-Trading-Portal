@@ -5,7 +5,9 @@ export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
   const path = request.nextUrl.pathname;
   const protectedRoute =
-    /^\/(dashboard|research|portfolio|alerts|settings)(\/|$)/.test(path);
+    /^\/(dashboard|markets|research|insights|portfolio|alerts|settings|admin)(\/|$)/.test(
+      path,
+    );
   if (!supabaseConfigured()) {
     if (protectedRoute)
       return NextResponse.redirect(
@@ -49,10 +51,13 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     "/dashboard/:path*",
+    "/markets/:path*",
     "/research/:path*",
     "/portfolio/:path*",
     "/alerts/:path*",
     "/settings/:path*",
+    "/insights/:path*",
+    "/admin/:path*",
     "/login",
   ],
 };

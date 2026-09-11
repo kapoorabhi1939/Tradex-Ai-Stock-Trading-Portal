@@ -1,29 +1,39 @@
-import { LogOut, ShieldCheck, Database, Info } from "lucide-react";
-import { getWorkspace } from "@/lib/workspace";
+import Link from "next/link";
+import {
+  LogOut,
+  ShieldCheck,
+  Database,
+  Info,
+  SlidersHorizontal,
+} from "lucide-react";
+import { getAccount } from "@/lib/workspace";
 import { saveProfile } from "@/app/actions/workspace";
 import { signOut } from "@/app/actions/auth";
 import { ActionForm } from "@/components/action-form";
 import { PageHeading, Panel, SectionTitle, DemoBadge } from "@/components/ui";
+import { PlanBadge, UpgradePrompt } from "@/components/product-surfaces";
+import { maskedEmail } from "@/lib/format";
 
-export const metadata = { title: "Settings" };
+export const metadata = { title: "Account" };
 export default async function Settings() {
-  const data = await getWorkspace();
+  const data = await getAccount();
+  const accountEmail = maskedEmail(data.email);
   return (
     <>
       <PageHeading
-        eyebrow="SETTINGS / YOUR WORKSPACE"
+        eyebrow="ACCOUNT / YOUR WORKSPACE"
         title="A workspace that’s yours."
-        description="Manage your profile and understand how Tradex AI works."
+        description="Manage your profile, plan, preferences and account security."
       />
       <div className="settings-grid">
         <div className="stack">
           <Panel>
-            <SectionTitle title="Your account" />
+            <SectionTitle title="Profile" sub="How you appear in Tradex" />
             <div className="account-email">
               <span className="avatar">{data.email[0]?.toUpperCase()}</span>
               <div>
-                <strong>{data.email}</strong>
-                <small>Secure workspace account</small>
+                <strong>{data.displayName || accountEmail}</strong>
+                <small>{accountEmail}</small>
               </div>
             </div>
             <ActionForm
@@ -45,10 +55,28 @@ export default async function Settings() {
             </ActionForm>
           </Panel>
           <Panel>
+            <SectionTitle title="Plan & billing" sub="Your current access" />
+            <div className="current-plan">
+              <div>
+                <PlanBadge />
+                <strong>Tradex Free</strong>
+                <p>Market research, watchlist, portfolio and core alerts.</p>
+              </div>
+              <Link className="button secondary small-button" href="/pricing">
+                Compare plans
+              </Link>
+            </div>
+            <UpgradePrompt compact />
+          </Panel>
+          <Panel>
             <SectionTitle
-              title="Session"
-              sub="Sign out of this browser. Your saved research remains in your account."
+              title="Session & security"
+              sub="This browser session"
             />
+            <div className="settings-info">
+              <ShieldCheck size={21} />
+              <p>Your session is protected by secure account authentication.</p>
+            </div>
             <ActionForm
               action={signOut}
               label={
@@ -62,6 +90,26 @@ export default async function Settings() {
           </Panel>
         </div>
         <div className="stack">
+          <Panel>
+            <SectionTitle title="Preferences" sub="Workspace defaults" />
+            <div className="settings-info">
+              <SlidersHorizontal size={21} />
+              <div>
+                <strong>Market preferences</strong>
+                <p>
+                  United States market focus, USD portfolio valuation and daily
+                  research charts.
+                </p>
+              </div>
+            </div>
+            <div className="settings-option">
+              <div>
+                <strong>Alert evaluation</strong>
+                <p>Manual, deliberate evaluation from your Alerts workspace.</p>
+              </div>
+              <span>On request</span>
+            </div>
+          </Panel>
           <Panel>
             <SectionTitle title="Market information" />
             <div className="settings-info">
@@ -92,10 +140,9 @@ export default async function Settings() {
             <div className="settings-info">
               <Info size={21} />
               <p>
-                Tradex AI is an equity research and decision-support portal. It
+                Tradex AI is a market research and decision-support portal. It
                 does not execute trades or provide personalized investment
-                advice. Portfolio scores are educational risk proxies; they
-                cannot predict future losses or returns.
+                advice.
               </p>
             </div>
           </Panel>

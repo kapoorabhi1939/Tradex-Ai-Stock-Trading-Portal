@@ -225,12 +225,12 @@ export function AlertsManager({
                     </small>
                     <h3>
                       {item.ticker} ·{" "}
-                      {item.message.includes("Demo price")
+                      {/price \$[\d.]+; .* indication/i.test(item.message)
                         ? "Archived evaluation"
                         : "Condition matched"}
                     </h3>
                     <p>
-                      {item.message.includes("Demo price")
+                      {/price \$[\d.]+; .* indication/i.test(item.message)
                         ? "Recorded before the current market-data connection."
                         : item.message}
                     </p>

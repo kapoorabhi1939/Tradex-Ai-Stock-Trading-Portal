@@ -8,6 +8,8 @@ import {
   ChartPie,
   Bell,
   Settings,
+  PanelsTopLeft,
+  BookOpen,
   Menu,
   X,
   LogOut,
@@ -18,24 +20,44 @@ import { InstrumentSearch } from "./instrument-search";
 import { Brand, DemoBadge, Disclaimer } from "./ui";
 import { ActionForm } from "./action-form";
 import { signOut } from "@/app/actions/auth";
+import { PlanBadge } from "./product-surfaces";
+import { accountDestinations } from "@/lib/navigation";
+import { maskedEmail } from "@/lib/format";
 const links = [
   ["/dashboard", "Dashboard", LayoutDashboard],
+  ["/markets", "Markets", PanelsTopLeft],
   ["/research", "Research", Search],
+  ["/insights", "Insights", BookOpen],
   ["/portfolio", "Portfolio", ChartPie],
   ["/alerts", "Alerts", Bell],
   ["/settings", "Settings", Settings],
 ] as const;
 export function Shell({
   email,
+  displayName,
+  admin = false,
   children,
 }: {
   email: string;
+  displayName?: string;
+  admin?: boolean;
   children: ReactNode;
 }) {
   const pathname = usePathname();
+  const accountEmail = maskedEmail(email);
   const [open, setOpen] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);
   const menuRef = useRef<HTMLButtonElement>(null);
+  const accountMenuRef = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    const closeAccountMenu = (event: PointerEvent) => {
+      if (!accountMenuRef.current?.contains(event.target as Node)) {
+        accountMenuRef.current?.removeAttribute("open");
+      }
+    };
+    document.addEventListener("pointerdown", closeAccountMenu);
+    return () => document.removeEventListener("pointerdown", closeAccountMenu);
+  }, []);
   useEffect(() => {
     if (!open) return;
     const previousFocus = document.activeElement as HTMLElement | null;
@@ -45,7 +67,7 @@ export function Shell({
     const focusable = () =>
       Array.from(
         sidebarRef.current?.querySelectorAll<HTMLElement>(
-          "a[href],button:not(:disabled)",
+          "a[href],button:not(:disabled),summary",
         ) ?? [],
       ).filter((el) => el.offsetParent !== null);
     focusable()[0]?.focus();
@@ -56,9 +78,11 @@ export function Shell({
         setOpen(false);
       }
       if (event.key !== "Tab") return;
-      const elements = focusable(),
-        first = elements[0],
-        last = elements.at(-1);
+      const elements = focusable();
+      const first = elements[0];
+      const last = accountMenuRef.current?.open
+        ? accountMenuRef.current.querySelector<HTMLElement>(".sidebar-signout")
+        : accountMenuRef.current?.querySelector<HTMLElement>("summary");
       if (!sidebarRef.current?.contains(document.activeElement)) {
         event.preventDefault();
         first?.focus();
@@ -73,12 +97,12 @@ export function Shell({
     const onResize = () => {
       if (!media.matches) setOpen(false);
     };
-    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("keydown", onKeyDown, true);
     media.addEventListener("change", onResize);
     return () => {
       cancelAnimationFrame(focusFrame);
       document.body.style.overflow = originalOverflow;
-      document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("keydown", onKeyDown, true);
       media.removeEventListener("change", onResize);
       if (previousFocus?.isConnected) previousFocus.focus();
     };
@@ -128,24 +152,52 @@ export function Shell({
               Start researching <ArrowUpRight size={15} />
             </Link>
           </div>
-          <div className="account">
-            <span className="avatar">{email.slice(0, 1).toUpperCase()}</span>
-            <div>
-              <strong>Your workspace</strong>
-              <span title={email}>{email}</span>
+          <details
+            ref={accountMenuRef}
+            className="account-menu"
+            onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                event.preventDefault();
+                event.currentTarget.removeAttribute("open");
+                event.currentTarget.querySelector("summary")?.focus();
+              }
+            }}
+          >
+            <summary className="account">
+              <span className="avatar">{email.slice(0, 1).toUpperCase()}</span>
+              <div>
+                <strong>{displayName || "Your workspace"}</strong>
+                <span title="Signed-in account">{accountEmail}</span>
+              </div>
+              <PlanBadge />
+            </summary>
+            <div className="account-popover">
+              <div>
+                <strong>{displayName || "Tradex account"}</strong>
+                <span>{accountEmail}</span>
+              </div>
+              <PlanBadge />
+              {accountDestinations(admin).map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              ))}
+              <ActionForm
+                action={signOut}
+                label={
+                  <>
+                    <LogOut size={15} /> Sign out
+                  </>
+                }
+                pendingLabel="Signing out…"
+                buttonClass="sidebar-signout"
+              />
             </div>
-          </div>
-          <ActionForm
-            action={signOut}
-            label={
-              <>
-                <LogOut size={16} />
-                Sign out
-              </>
-            }
-            pendingLabel="Signing out…"
-            buttonClass="sidebar-signout"
-          />
+          </details>
         </div>
       </aside>
       {open && (

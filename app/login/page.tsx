@@ -113,9 +113,11 @@ export default async function Login({
             </label>
           </ActionForm>
           <p className="login-help">
-            Use your workspace account. Need access? Contact your workspace
-            administrator.
+            Use your workspace account. New to Tradex?
           </p>
+          <Link href="/signup" className="text-link">
+            Create an account →
+          </Link>
           <div className="login-disclosure">
             <DemoBadge />
             <span>Your research, securely connected.</span>

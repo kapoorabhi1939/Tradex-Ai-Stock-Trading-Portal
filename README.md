@@ -8,12 +8,12 @@ Use Node.js 22+ and npm from the repository root.
 
 1. Run npm ci.
 2. Create .env.local privately from the blank .env.example without overwriting an existing file.
-3. Configure NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY and **TWELVE_DATA_API_KEY**.
+3. Configure NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY and **TWELVE_DATA_API_KEY**. Optionally set **TRADEX_ADMIN_EMAILS** to a comma-separated list of authorized admin accounts for local admin-shell work.
 4. Obtain the market key from your [Twelve Data dashboard](https://twelvedata.com/account/api-keys). Never use a NEXT_PUBLIC prefix for it.
 5. Apply supabase/migrations/202609100001_tradex_mvp.sql once to your intended Supabase project and provision a confirmed email/password account. Existing configured projects need no new migration for Phase 1.
 6. Run npm run dev and open http://127.0.0.1:3000.
 
-Account provisioning/signup/recovery remains a later phase. No login bypass is supplied.
+Public signup and recovery remain later phases. The /signup route is a disabled early-access shell and never creates an account or collects payment. No login bypass is supplied.
 
 ## Commands
 
@@ -30,17 +30,18 @@ Account provisioning/signup/recovery remains a later phase. No login bypass is s
 
 All provider access goes through lib/market-data/provider.ts and its server-only Twelve Data adapter. UI and business logic receive normalized instruments, quotes and chronological OHLC candles; raw provider responses and credentials never enter client props.
 
-| Module | Responsibility |
-| --- | --- |
-| types.ts | Provider-neutral instruments, quotes, candles and result freshness |
-| normalizers.ts | Defensive parsing, symbol validation, asset classification |
-| transport.ts | Timeout, authorization header and sanitized HTTP/provider errors |
-| twelve-data.ts | Server-only adapter, quote batching, rate guard and disk cache integration |
-| cache.ts | Central freshness policy, single-flight loading, stale fallback and failure backoff |
-| analytics.ts | Price-derived signal, partial portfolio valuation and price/signal rule evaluation |
-| saved-symbols.ts | Existing persistence eligibility; separate from global discovery |
+| Module           | Responsibility                                                                      |
+| ---------------- | ----------------------------------------------------------------------------------- |
+| types.ts         | Provider-neutral instruments, quotes, candles and result freshness                  |
+| normalizers.ts   | Defensive parsing, symbol validation, asset classification                          |
+| transport.ts     | Timeout, authorization header and sanitized HTTP/provider errors                    |
+| twelve-data.ts   | Server-only adapter, quote batching, rate guard and disk cache integration          |
+| cache.ts         | Central freshness policy, single-flight loading, stale fallback and failure backoff |
+| analytics.ts     | Price-derived signal, partial portfolio valuation and price/signal rule evaluation  |
+| saved-symbols.ts | Existing persistence eligibility; separate from global discovery                    |
 
 Actual application endpoints:
+
 - /quote: latest quote, OHLC/day movement, currency/exchange and market state when supplied. Latest price comes from this response, avoiding a redundant /price call.
 - /time_series: 260 daily candles, ascending order. The client slices these into 1M, 3M, 6M and 1Y ranges without new provider calls.
 - /symbol_search: provider-discovered instruments beyond the original fixed list. Accessible through an authenticated local /api/market/search route.
@@ -49,13 +50,13 @@ Quote metadata and search supply instrument information when available. Unknown 
 
 ### Cache and request policy
 
-| Data | Fresh TTL | Reason |
-| --- | --- | --- |
-| Quotes / supplied market state | 60 seconds | Conservative navigation freshness on a limited development plan |
-| Symbol search / search metadata | 10 minutes | Identical discovery queries rarely change |
-| Daily history | 1 hour | Reuse across charts and signals; no intraday polling |
-| Stale real values | At most 24 hours from retrieval | Keep last successful data through a transient outage, visibly marked |
-| Failed requests | 60 seconds | Avoid repeated requests during quota/outage recovery |
+| Data                            | Fresh TTL                       | Reason                                                               |
+| ------------------------------- | ------------------------------- | -------------------------------------------------------------------- |
+| Quotes / supplied market state  | 60 seconds                      | Conservative navigation freshness on a limited development plan      |
+| Symbol search / search metadata | 10 minutes                      | Identical discovery queries rarely change                            |
+| Daily history                   | 1 hour                          | Reuse across charts and signals; no intraday polling                 |
+| Stale real values               | At most 24 hours from retrieval | Keep last successful data through a transient outage, visibly marked |
+| Failed requests                 | 60 seconds                      | Avoid repeated requests during quota/outage recovery                 |
 
 Successful normalized public market responses are stored in ignored .cache/tradex-market files and a bounded 500-entry process cache. User data, tokens and API keys are never stored there. A 20ms quote collector batches unique pending symbols; concurrent consumers share promises. Batches still cost one credit per symbol. The process guard limits market usage to seven credits per rolling minute and 750/day, leaving margin under the observed Basic plan (eight/minute). No polling or automatic retry loop runs.
 
@@ -66,13 +67,18 @@ Search waits 450ms after typing, requires two characters, cancels superseded bro
 ## Product routes
 
 - / — public product landing, no fabricated market preview
+- /pricing — public Free, Plus and Pro monthly plan comparison with launch-ready product copy
+- /signup — public, disabled early-access account-creation shell
 - /login — real cookie-based sign-in
-- /dashboard?symbol=... — coherent URL-selected Market Lens, watchlist, portfolio and recent activity
+- /dashboard?symbol=... — coherent URL-selected Market Lens, watchlist, portfolio, recent activity and Tradex Insights preview
+- /markets — authenticated U.S.-first market discovery hub with broader supported research; Futures is explicitly unavailable
+- /insights — authenticated guidance, premium-content states and editorial empty state
 - /research — provider-backed discovery
 - /research/[ticker] — safely encoded dynamic instrument research, including qualified symbols and currency pairs
 - /portfolio — saved holdings and real/cached USD valuation
 - /alerts — manual price/signal evaluation, editing, pause/resume and history
-- /settings — profile and account information
+- /settings — profile, Free plan identity, upgrade paths, preferences and security information
+- /admin — server-authorized operations shell with Overview, Users, Subscriptions, Insights, Analytics and Settings
 
 Only label timestamps/market state supplied by the provider. The UI does not advertise all quotes as real-time. Daily bars may include the current session; their dates and observation ranges are visible.
 
@@ -89,13 +95,15 @@ Manual alerts use fresh cached quotes and real-price technical signals. Stale/un
 The existing migration, numeric checks, ownership policies, composite foreign keys and server action authentication remain intact. Phase 1 intentionally preserves the database's 12-symbol persistence constraint for watchlists, USD holdings and alerts: AAPL, NVDA, MSFT, AMZN, TSLA, META, GOOGL, JPM, JNJ, XOM, PG and CAT. Research/search is independent and not restricted to these symbols. Other instruments are research-only; foreign listings cannot be saved as their USD counterparts. Generalizing saved instruments requires a reviewed instrument-identity/currency migration in a later phase.
 
 All mutations verify the current Supabase user and restrict ownership. No service-role key is required. Market keys use a server-side Authorization header, never browser query strings, localStorage or public environment variables. Provider failures return sanitized product messages; missing market configuration names TWELVE_DATA_API_KEY only in server development diagnostics.
+Admin access uses a server-only allowlist from TRADEX_ADMIN_EMAILS. The admin layout authenticates the Supabase session and checks the normalized email on every admin request. Normal users are redirected to their workspace, anonymous users are redirected to sign in, and the client receives only the resulting admin visibility boolean. The admin shell reads no cross-user data and shows no invented metrics.
 
 Private environment files, browser profiles/storage state, screenshots, logs and build output are ignored. Never include them in a commit.
 
 ## Checkpoints and limits
 
 Verified baseline: e004336c84a223f9eb6670182f5a36cb3f97eb70, pushed before Phase 1.
-Phase 1 branch: feat/premium-live-market-data. Do not commit, push or merge without explicit review approval.
+Phase 1 local checkpoint: bd98627 on feat/premium-live-market-data.
+Phase 1.5 working branch: feat/product-shell. Do not push or merge without explicit review approval.
 
 The original 27 tests and deterministic fixture modules remain as baseline regression coverage. Active application components do not import the fictional market data. New provider tests use mock responses, never a real key or live API calls. See docs/PHASE1_REPORT.md for actual live/browser results; the earlier IMPLEMENTATION_STATUS.md records the baseline only.
 

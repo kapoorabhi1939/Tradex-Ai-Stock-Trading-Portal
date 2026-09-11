@@ -1,16 +1,16 @@
 import Link from "next/link";
 import { PageHeading, Panel, SectionTitle } from "@/components/ui";
 import { InstrumentSearch } from "@/components/instrument-search";
-import { getWorkspace } from "@/lib/workspace";
+import { getWatchlist } from "@/lib/workspace";
 export const metadata = { title: "Research" };
 export default async function Research() {
-  const data = await getWorkspace();
+  const watchlist = await getWatchlist();
   return (
     <>
       <PageHeading
         eyebrow="RESEARCH"
         title="Find your next perspective."
-        description="Search instruments across equities, ETFs, currencies and digital assets."
+        description="Research U.S.-listed stocks and ETFs, with other supported markets available by symbol."
       />
       <Panel className="research-discovery">
         <span className="eyebrow">EXPLORE THE MARKETS</span>
@@ -27,8 +27,8 @@ export default async function Research() {
           sub="Continue with a saved instrument"
         />
         <div className="discovery-links">
-          {(data.watchlist.length
-            ? data.watchlist.map((i) => i.ticker)
+          {(watchlist.length
+            ? watchlist.map((i) => i.ticker)
             : ["AAPL", "MSFT", "NVDA", "AMZN", "TSLA"]
           ).map((s) => (
             <Link key={s} href={"/research/" + s} prefetch={false}>
