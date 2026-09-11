@@ -8,7 +8,12 @@ import {
   textField,
   tickerField,
 } from "@/lib/validation";
-import { evaluateRule, type AlertRule } from "@/lib/alerts";
+import type { AlertRule } from "@/lib/alerts/model";
+import { market } from "@/lib/market-data/provider";
+import {
+  technicalSignal,
+  evaluateMarketRule,
+} from "@/lib/market-data/analytics";
 import type { FormState } from "./auth";
 
 function databaseError(error: { code?: string } | null) {
@@ -114,7 +119,7 @@ export async function createAlert(_: FormState, form: FormData) {
       .from("alert_rules")
       .insert({ ...alertFields(form), user_id: user.id });
     databaseError(result.error);
-    return "Alert rule saved. Evaluate demo alerts to check this snapshot.";
+    return "Alert rule saved. Evaluate alerts to check current market conditions.";
   });
 }
 export async function updateAlert(_: FormState, form: FormData) {
@@ -161,7 +166,7 @@ export async function deleteAlert(_: FormState, form: FormData) {
       .select("id")
       .single();
     databaseError(result.error);
-    return "Rule and its associated demo history removed.";
+    return "Rule and its associated history removed.";
   });
 }
 export async function evaluateAlerts(_: FormState) {
@@ -174,11 +179,51 @@ export async function evaluateAlerts(_: FormState) {
       .eq("user_id", user.id)
       .eq("enabled", true);
     databaseError(result.error);
-    const matches = (result.data as AlertRule[]).flatMap((rule) => {
-      const match = evaluateRule({
-        ...rule,
-        threshold: rule.threshold === null ? null : Number(rule.threshold),
-      });
+    const rules = result.data as AlertRule[];
+    const quotes = await market.quotes(rules.map((r) => r.ticker));
+    const historySymbols = [
+      ...new Set(
+        rules
+          .filter((r) => !r.condition_type.startsWith("price_"))
+          .map((r) => r.ticker),
+      ),
+    ];
+    const histories = Object.fromEntries(
+      await Promise.all(
+        historySymbols.map(async (symbol) => [
+          symbol,
+          await market.history(symbol),
+        ]),
+      ),
+    );
+    let skipped = 0;
+    const matches = rules.flatMap((rule) => {
+      const quote = quotes[rule.ticker];
+      const history = histories[rule.ticker];
+      if (
+        !quote?.data ||
+        quote.stale ||
+        (!rule.condition_type.startsWith("price_") &&
+          (!history?.data || history.stale))
+      ) {
+        skipped++;
+        return [];
+      }
+      const signal = history?.data
+        ? technicalSignal(rule.ticker, history.data)
+        : null;
+      if (!rule.condition_type.startsWith("price_") && !signal) {
+        skipped++;
+        return [];
+      }
+      const match = evaluateMarketRule(
+        {
+          ...rule,
+          threshold: rule.threshold === null ? null : Number(rule.threshold),
+        },
+        quote.data,
+        signal,
+      );
       return match
         ? [
             {
@@ -191,7 +236,11 @@ export async function evaluateAlerts(_: FormState) {
         : [];
     });
     if (!matches.length)
-      return "Evaluation complete. No enabled rules matched this demo snapshot.";
+      return (
+        "Evaluation complete. No new matches. " +
+        skipped +
+        " rules skipped because market inputs were unavailable."
+      );
     const saved = await db
       .from("triggered_alerts")
       .upsert(matches, {
@@ -200,7 +249,7 @@ export async function evaluateAlerts(_: FormState) {
       })
       .select("id");
     databaseError(saved.error);
-    return `Evaluation complete. ${saved.data?.length ?? 0} new matches recorded; previously recorded matches were skipped.`;
+    return `Evaluation complete. ${saved.data?.length ?? 0} new matches recorded; previously recorded matches were skipped. ${skipped} rules lacked current inputs.`;
   });
 }
 export async function saveProfile(_: FormState, form: FormData) {

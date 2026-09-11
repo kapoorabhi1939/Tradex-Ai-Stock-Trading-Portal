@@ -9,7 +9,7 @@ export async function signIn(_: FormState, form: FormData): Promise<FormState> {
   if (!supabaseConfigured())
     return {
       error:
-        "Authentication is not configured yet. Add the two Supabase public project values to .env.local, then restart the app.",
+        "Account access is unavailable. Please contact your workspace administrator.",
     };
   const email = form.get("email");
   const password = form.get("password");

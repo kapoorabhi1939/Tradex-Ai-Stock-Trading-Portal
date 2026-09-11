@@ -1,56 +1,94 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
-import { Plus, Pencil, Trash2, ShieldCheck, AlertTriangle } from "lucide-react";
-import { analyzePortfolio, type Holding } from "@/lib/portfolio";
-import { money, percent } from "@/lib/format";
+import { Plus, Pencil, Trash2 } from "lucide-react";
+import type { Holding } from "@/lib/portfolio";
+import type { QuoteMap } from "@/lib/market-data/types";
+import { valuePortfolio } from "@/lib/market-data/analytics";
+import { money } from "@/lib/format";
 import { saveHolding, deleteHolding } from "@/app/actions/workspace";
 import { ActionForm } from "./action-form";
 import { TickerSelect } from "./ticker-select";
 import { Panel, SectionTitle, Stat, EmptyState } from "./ui";
-import { AllocationChart } from "./charts";
-export function PortfolioManager({ holdings }: { holdings: Holding[] }) {
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const editing = holdings.find((holding) => holding.id === editingId) ?? null;
-  const report = analyzePortfolio(holdings);
+export function PortfolioManager({
+  holdings,
+  quotes,
+}: {
+  holdings: Holding[];
+  quotes: QuoteMap;
+}) {
+  const [editingId, setEditingId] = useState<string | null>(null),
+    editing = holdings.find((h) => h.id === editingId) ?? null,
+    report = valuePortfolio(holdings, quotes);
   return (
     <>
       <div className="research-summary">
         <Stat
-          label="Demo market value"
-          value={money(report.total)}
-          detail={`${holdings.length} saved position${holdings.length === 1 ? "" : "s"}`}
+          label={report.partial ? "Known market value" : "Current market value"}
+          value={money(report.knownValue)}
+          detail={
+            report.pricedCount + " of " + holdings.length + " positions priced"
+          }
+        />
+        <Stat
+          label="Cost basis"
+          value={money(report.cost)}
+          detail="Saved acquisition costs"
         />
         <Stat
           label="Unrealized gain / loss"
           value={
-            <span className={report.gain >= 0 ? "positive" : "negative"}>
-              {money(report.gain)}
-            </span>
+            report.gain === null ? (
+              "—"
+            ) : (
+              <span className={report.gain >= 0 ? "positive" : "negative"}>
+                {money(report.gain)}
+              </span>
+            )
           }
-          detail={`${percent(report.gainPercent)} on ${money(report.cost)} cost basis`}
+          detail={
+            report.partial
+              ? "Full valuation unavailable"
+              : "Across all positions"
+          }
         />
         <Stat
-          label="Diversification score"
-          value={holdings.length ? `${report.diversification}/100` : "—"}
-          detail="Higher means more diversified"
-        />
-        <Stat
-          label="Risk indicator"
-          value={holdings.length ? `${report.risk}/100` : "—"}
-          detail="Higher means greater modeled risk"
+          label="Largest exposure"
+          value={
+            report.positions.length && report.knownValue
+              ? Math.max(
+                  ...report.positions.map(
+                    (p) => ((p.value ?? 0) / report.knownValue) * 100,
+                  ),
+                ).toFixed(1) + "%"
+              : "—"
+          }
+          detail="Share of priced positions"
         />
       </div>
+      {report.partial && (
+        <p className="data-notice" role="status">
+          Some quotes are unavailable. Known value includes only priced
+          positions; total gain/loss remains unavailable. Your quantities and
+          cost basis are unchanged.
+        </p>
+      )}
+      {report.positions.some((p) => p.stale) && (
+        <p className="data-notice">
+          Some positions use the last successfully retrieved quote. Check the
+          timestamp beside each position.
+        </p>
+      )}
       <div className="portfolio-grid">
         <div className="stack">
           <Panel>
             <SectionTitle
               title={
                 editing
-                  ? `Edit ${editing.ticker} holding`
-                  : "Build your portfolio"
+                  ? "Edit " + editing.ticker + " holding"
+                  : "Add a position"
               }
-              sub="Track your exposure using demonstration prices. No orders are placed."
+              sub="Keep your acquisition price separate from the market price."
             />
             <ActionForm
               key={editing?.id ?? "new"}
@@ -73,7 +111,6 @@ export function PortfolioManager({ holdings }: { holdings: Holding[] }) {
                   min="0.000001"
                   max="100000000"
                   step="0.000001"
-                  placeholder="e.g. 10"
                   defaultValue={editing?.shares}
                   required
                 />
@@ -86,7 +123,6 @@ export function PortfolioManager({ holdings }: { holdings: Holding[] }) {
                   min="0"
                   max="1000000"
                   step="0.000001"
-                  placeholder="e.g. 210.00"
                   defaultValue={editing?.average_cost}
                   required
                 />
@@ -101,15 +137,9 @@ export function PortfolioManager({ holdings }: { holdings: Holding[] }) {
           <Panel className="holdings-panel">
             <SectionTitle
               title="Your holdings"
-              sub="Values and weights recalculate from saved positions"
+              sub="Market values calculated from your saved positions"
             />
-            {!holdings.length ? (
-              <EmptyState title="Every portfolio starts with a position">
-                Add your first holding above. Allocation, unrealized gain/loss,
-                and risk analysis will appear here and stay saved across
-                sessions.
-              </EmptyState>
-            ) : (
+            {report.positions.length ? (
               <div className="table-scroll">
                 <table>
                   <caption className="sr-only">
@@ -117,9 +147,9 @@ export function PortfolioManager({ holdings }: { holdings: Holding[] }) {
                   </caption>
                   <thead>
                     <tr>
-                      <th>Equity</th>
-                      <th>Shares / Avg. cost</th>
-                      <th>Value / Weight</th>
+                      <th>Instrument</th>
+                      <th>Shares / Cost</th>
+                      <th>Current value</th>
                       <th>Gain / loss</th>
                       <th>Manage</th>
                     </tr>
@@ -129,37 +159,47 @@ export function PortfolioManager({ holdings }: { holdings: Holding[] }) {
                       <tr key={p.id}>
                         <td>
                           <Link
-                            href={`/research/${p.ticker}`}
                             className="strong"
+                            href={"/research/" + p.ticker}
                           >
                             {p.ticker}
                           </Link>
                           <small className="table-secondary">
-                            {p.equity.sector}
+                            {p.quote?.name ?? "Quote unavailable"}
+                          </small>
+                          <small className="table-secondary">
+                            {p.quote
+                              ? (p.stale ? "Cached · " : "") +
+                                p.quote.timestamp
+                                  .slice(0, 16)
+                                  .replace("T", " ") +
+                                " UTC"
+                              : ""}
                           </small>
                         </td>
-                        <td className="numeric">
+                        <td>
                           {p.shares}
                           <small className="table-secondary">
                             {money(p.average_cost)}
                           </small>
                         </td>
-                        <td className="numeric strong">
-                          {money(p.value)}
-                          <small className="table-secondary">
-                            {p.weight.toFixed(1)}%
-                          </small>
-                        </td>
+                        <td>{p.value === null ? "—" : money(p.value)}</td>
                         <td
-                          className={`numeric ${p.gain >= 0 ? "positive" : "negative"}`}
+                          className={
+                            p.gain === null
+                              ? "muted"
+                              : p.gain >= 0
+                                ? "positive"
+                                : "negative"
+                          }
                         >
-                          {money(p.gain)}
+                          {p.gain === null ? "—" : money(p.gain)}
                         </td>
                         <td>
                           <div className="row-actions">
                             <button
                               className="icon-button"
-                              aria-label={`Edit ${p.ticker}`}
+                              aria-label={"Edit " + p.ticker}
                               onClick={() => setEditingId(p.id)}
                             >
                               <Pencil size={15} />
@@ -167,10 +207,12 @@ export function PortfolioManager({ holdings }: { holdings: Holding[] }) {
                             <ActionForm
                               action={deleteHolding}
                               label={<Trash2 size={15} />}
-                              accessibleLabel={`Delete ${p.ticker}`}
+                              accessibleLabel={"Delete " + p.ticker}
                               buttonClass="icon-button danger"
                               pendingLabel="…"
-                              confirmMessage={`Remove ${p.ticker} from your portfolio?`}
+                              confirmMessage={
+                                "Remove " + p.ticker + " from your portfolio?"
+                              }
                             >
                               <input type="hidden" name="id" value={p.id} />
                             </ActionForm>
@@ -181,69 +223,50 @@ export function PortfolioManager({ holdings }: { holdings: Holding[] }) {
                   </tbody>
                 </table>
               </div>
+            ) : (
+              <EmptyState title="Build your portfolio">
+                Add a position to understand its current value and your
+                exposure.
+              </EmptyState>
             )}
           </Panel>
         </div>
-        <div className="stack">
-          <Panel>
-            <SectionTitle
-              title="Sector allocation"
-              sub="Share of current demonstration value"
-            />
-            {holdings.length ? (
-              <AllocationChart sectors={report.sectors} />
-            ) : (
-              <div className="empty-donut">
+        <Panel>
+          <SectionTitle
+            title="Position allocation"
+            sub="Based on available USD market values"
+          />
+          {report.positions.map((p) => (
+            <div className="allocation-row" key={p.id}>
+              <div>
+                <strong>{p.ticker}</strong>
                 <span>
-                  Allocation appears
-                  <br />
-                  after your first holding
+                  {p.value !== null && report.knownValue
+                    ? ((p.value / report.knownValue) * 100).toFixed(1) + "%"
+                    : "—"}
                 </span>
               </div>
-            )}
-          </Panel>
-          <Panel>
-            <SectionTitle title="Know your exposure" />
-            <div className="risk-metrics">
-              <div>
-                <span>Largest position</span>
-                <strong>{report.largestPosition.toFixed(1)}%</strong>
-              </div>
-              <div>
-                <span>Largest sector</span>
-                <strong>{report.largestSector.toFixed(1)}%</strong>
-              </div>
-              <div>
-                <span>Concentration score</span>
-                <strong>{report.concentration}/100</strong>
-              </div>
-              <div>
-                <span>Weighted volatility proxy</span>
-                <strong>{report.volatility.toFixed(1)}%</strong>
+              <div className="allocation-track">
+                <span
+                  style={{
+                    width:
+                      p.value !== null && report.knownValue
+                        ? (p.value / report.knownValue) * 100 + "%"
+                        : "0%",
+                  }}
+                />
               </div>
             </div>
-            {report.flags.map((flag) => (
-              <div className="risk-flag" key={flag}>
-                <AlertTriangle size={17} />
-                <p>{flag}</p>
-              </div>
-            ))}
-            {!!holdings.length && !report.flags.length && (
-              <div className="insight-note">
-                <ShieldCheck size={18} />
-                <p>
-                  No concentration thresholds exceeded. Diversification does not
-                  eliminate market risk.
-                </p>
-              </div>
-            )}
-            <p className="muted small">
-              A transparent concentration and historical volatility heuristic.
-              It does not model correlations, liquidity, taxes, or future
-              losses.
-            </p>
-          </Panel>
-        </div>
+          ))}
+          <p className="muted small">
+            Position concentration{" "}
+            {report.concentration === null
+              ? "is unavailable"
+              : report.concentration.toFixed(0) + "/100"}
+            . Sector and volatility risk estimates require additional verified
+            market information.
+          </p>
+        </Panel>
       </div>
     </>
   );

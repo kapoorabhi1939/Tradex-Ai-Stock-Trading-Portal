@@ -66,12 +66,10 @@ export default async function Login({
           <p className="muted">Sign in to your Tradex AI workspace.</p>
           {!configured && (
             <div className="setup-notice" role="status">
-              <strong>One-time connection setup</strong>
+              <strong>Account access unavailable</strong>
               <p>
-                Create <code>.env.local</code> in the repository root with your
-                saved Supabase URL and publishable key. Restart the app, apply
-                the migration, and create a Supabase Auth user. No demo password
-                or sign-in bypass is provided.
+                Account access is being configured. Please contact your
+                workspace administrator.
               </p>
             </div>
           )}
@@ -115,12 +113,12 @@ export default async function Login({
             </label>
           </ActionForm>
           <p className="login-help">
-            Use the account created in your Supabase project. Need access?
-            Contact your workspace administrator.
+            Use your workspace account. Need access? Contact your workspace
+            administrator.
           </p>
           <div className="login-disclosure">
             <DemoBadge />
-            <span>Real account. Demonstration market dataset.</span>
+            <span>Your research, securely connected.</span>
           </div>
         </div>
         <p className="disclaimer">

@@ -1,170 +1,106 @@
 # Tradex AI
 
-A functional US-equities research and decision-support MVP built with Next.js, Supabase Auth, and Postgres. Market values are fictional demonstration data; accounts, saved watchlists, holdings, profiles, and alert records use Supabase.
+Tradex is a dark-first market research and portfolio workspace built with Next.js, Supabase Auth/Postgres and server-side Twelve Data. The repository root is the active application. Historical frontend/backend/prototype directories are reference only.
 
-**The repository root is the active application.** Run every command below from:
+## Local development
 
-```text
-C:\Users\epicg\Documents\Github\Tradex-Ai-Stock-Trading-Portal
-```
+Use Node.js 22+ and npm from the repository root.
 
-The preserved `frontend/`, `backend/`, and `prototype/` directories are historical reference only. Their mock authentication, fallback data, Python services, and trading controls are not part of this application. Do not deploy them.
+1. Run npm ci.
+2. Create .env.local privately from the blank .env.example without overwriting an existing file.
+3. Configure NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY and **TWELVE_DATA_API_KEY**.
+4. Obtain the market key from your [Twelve Data dashboard](https://twelvedata.com/account/api-keys). Never use a NEXT_PUBLIC prefix for it.
+5. Apply supabase/migrations/202609100001_tradex_mvp.sql once to your intended Supabase project and provision a confirmed email/password account. Existing configured projects need no new migration for Phase 1.
+6. Run npm run dev and open http://127.0.0.1:3000.
 
-## Quick start
-
-Requirements: Node.js 22 or newer and npm. This implementation was built with Node 24.18.0 and npm 11.16.0.
-
-```powershell
-npm ci
-Copy-Item .env.example .env.local
-# Edit .env.local privately using the two values saved from your Supabase project.
-npm run dev
-```
-
-Open [the local app](http://127.0.0.1:3000). Without Supabase configuration, the landing page works and protected routes redirect to a setup-aware login page. Authentication is never simulated.
-
-Do not overwrite an existing `.env.local` when copying the template. Never paste credentials into chat or commit environment files.
-
-## Supabase setup — required before the full demo
-
-1. In the existing project, obtain the project URL and **publishable key** from its Connect/API settings.
-2. Set these two variables in the repository-root `.env.local`:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-3. In Supabase SQL Editor, run [the migration](supabase/migrations/202609100001_tradex_mvp.sql) **once**. It is transactional and creates six tables, checks, indexes, timestamps, ownership foreign keys, and RLS policies. It intentionally fails if conflicting tables already exist; inspect those tables instead of deleting them or disabling security.
-4. In Authentication, enable email/password access and create a user through the dashboard. Set/confirm that user's email according to your project's configuration. Public signup and password-reset UI are not included in this MVP.
-5. Set the Auth Site URL to your local app URL during development; change it to your deployed HTTPS URL for deployment. This MVP uses password sign-in, not OAuth or email callback flows.
-6. Restart the Next.js server after setting environment variables, then sign in with that real Auth account.
-7. Execute [the acceptance checklist](docs/ACCEPTANCE_CHECKLIST.md), including a second-user isolation check.
-
-No service-role key or database password is used by the application. No credentials are included in `.env.example`. The publishable key is intentionally public, and RLS protects user-owned rows.
-
-Alternatively, teams already using the Supabase CLI can apply the tracked migration through their established linked-project workflow. CLI account linking and remote migration execution were not performed in this implementation session.
+Account provisioning/signup/recovery remains a later phase. No login bypass is supplied.
 
 ## Commands
 
-```powershell
-npm run dev
-npm run lint
-npm run typecheck
-npm test
-npm run build
-npm start
-npm run test:routes
-```
+- npm run dev — local server
+- npm run lint — application ESLint
+- npm run typecheck — TypeScript
+- npm test — original engine/database tests plus mocked provider/cache/live-analytics tests; no live provider calls
+- npm run build — production compilation
+- npm start — serve the production build
+- npm run test:routes — unauthenticated smoke checks against an already running local server (TRADEX_BASE_URL overrides port 3000)
+- npm audit --omit=dev — runtime dependency audit
 
-`test:routes` requires a running server. It defaults to port 3000; set `TRADEX_BASE_URL` to test a different local or staging server. It deliberately sends unauthenticated requests.
+## Market-data architecture
 
-The lockfile pins the installation used for validation. Next.js 16 uses a root `proxy.ts` and a standalone ESLint CLI; this project does not use `next lint`. The current framework also generated `AGENTS.md` / `CLAUDE.md` guidance.
+All provider access goes through lib/market-data/provider.ts and its server-only Twelve Data adapter. UI and business logic receive normalized instruments, quotes and chronological OHLC candles; raw provider responses and credentials never enter client props.
 
-## Architecture
-
-| Location | Responsibility |
+| Module | Responsibility |
 | --- | --- |
-| `app/` | Public pages, protected route group, loading/error/not-found screens |
-| `app/actions/` | Server-side authentication and validated database mutations |
-| `components/` | Shared shell, forms, analytical panels, charts, feature views |
-| `lib/supabase/` | Cookie-based SSR client and browser-client factory |
-| `lib/auth.ts` | Verified server-side user identity |
-| `lib/workspace.ts` | Request-scoped reads of the authenticated user's saved state |
-| `lib/demo-market/` | Deterministic fictional market snapshot |
-| `lib/signals/` | Explainable weighted-factor engine |
-| `lib/portfolio/` | Value, allocation, concentration, and risk calculations |
-| `lib/alerts/` | Manual snapshot rule evaluation |
-| `lib/validation.ts` | Server-side inputs and safe login destinations |
-| `supabase/migrations/` | Versioned Postgres schema and RLS |
-| `tests/` | Pure calculations plus real SQL migration/RLS tests in PGlite |
-| `scripts/smoke-routes.mjs` | Running-server public/protected route checks |
+| types.ts | Provider-neutral instruments, quotes, candles and result freshness |
+| normalizers.ts | Defensive parsing, symbol validation, asset classification |
+| transport.ts | Timeout, authorization header and sanitized HTTP/provider errors |
+| twelve-data.ts | Server-only adapter, quote batching, rate guard and disk cache integration |
+| cache.ts | Central freshness policy, single-flight loading, stale fallback and failure backoff |
+| analytics.ts | Price-derived signal, partial portfolio valuation and price/signal rule evaluation |
+| saved-symbols.ts | Existing persistence eligibility; separate from global discovery |
 
-Next.js App Router and TypeScript handle the entire application. Tailwind CSS 4 and shared CSS/components establish the visual system. Lucide provides icons; Recharts provides interactive price and allocation charts. Native semantic forms cover the current controls without an additional UI package or global state library. There is no active Python backend.
+Actual application endpoints:
+- /quote: latest quote, OHLC/day movement, currency/exchange and market state when supplied. Latest price comes from this response, avoiding a redundant /price call.
+- /time_series: 260 daily candles, ascending order. The client slices these into 1M, 3M, 6M and 1Y ranges without new provider calls.
+- /symbol_search: provider-discovered instruments beyond the original fixed list. Accessible through an authenticated local /api/market/search route.
 
-## Routes
+Quote metadata and search supply instrument information when available. Unknown fields are omitted. No paid fundamentals or fictional news/sentiment is displayed. Actual futures contracts are not claimed; the type model supports a future provider adapter. Exchange-reference pages alone are not evidence of available futures-contract data.
 
-| Route | Access and behavior |
-| --- | --- |
-| `/` | Public landing and interactive demonstration chart |
-| `/login` | Real email/password sign-in, configuration and error feedback |
-| `/dashboard` | Protected overview, saved watchlist, selected chart, calculated signal, portfolio and alert summaries |
-| `/research` | Protected search across company/ticker, sector filter and sorting |
-| `/research/[ticker]` | Protected history, factors, sentiment, synthetic headlines, related symbols |
-| `/portfolio` | Protected holding creation, editing/deletion, allocation and risk analysis |
-| `/alerts` | Protected persistent rules, edit/enable/pause/delete, manual evaluation and history |
-| `/settings` | Protected profile, account information, methodology and sign-out |
+### Cache and request policy
 
-Unknown paths return a useful 404. Unsupported tickers return 404 after authentication. Legacy `/orders` and `/positions` are not exposed.
+| Data | Fresh TTL | Reason |
+| --- | --- | --- |
+| Quotes / supplied market state | 60 seconds | Conservative navigation freshness on a limited development plan |
+| Symbol search / search metadata | 10 minutes | Identical discovery queries rarely change |
+| Daily history | 1 hour | Reuse across charts and signals; no intraday polling |
+| Stale real values | At most 24 hours from retrieval | Keep last successful data through a transient outage, visibly marked |
+| Failed requests | 60 seconds | Avoid repeated requests during quota/outage recovery |
 
-## Authentication and security
+Successful normalized public market responses are stored in ignored .cache/tradex-market files and a bounded 500-entry process cache. User data, tokens and API keys are never stored there. A 20ms quote collector batches unique pending symbols; concurrent consumers share promises. Batches still cost one credit per symbol. The process guard limits market usage to seven credits per rolling minute and 750/day, leaving margin under the observed Basic plan (eight/minute). No polling or automatic retry loop runs.
 
-The SSR integration follows the [Supabase cookie/session pattern](https://supabase.com/docs/guides/auth/server-side/creating-a-client). The proxy refreshes/validates claims; protected layouts and every data mutation verify the current user with `auth.getUser()`. Successful sign-in persists cookies and redirects only to an allowlisted local application route. Passwords are sent directly to Supabase Auth from the server and are never saved by this app.
+Search waits 450ms after typing, requires two characters, cancels superseded browser requests, handles empty/errors, supports arrow keys/Enter/Escape and closes on outside pointer events. Browser cancellation does not cancel an already-running shared provider request.
 
-Every user-data table has RLS. Queries and mutations also filter by authenticated ownership. Composite foreign keys prevent attaching one user's watchlist item or triggered alert to another user's parent record. The public role has no table access. Trigger history is append-only for authenticated clients, with deletion cascading from its owning rule. Profile rows are created when a user first saves their display name; an email-based greeting works beforehand.
+**Deployment limitation:** the local disk cache is suitable for this development/staging process. Read-only hosts fall back to memory. Rate counters and in-flight deduplication are process-local; a multi-instance public deployment needs a shared cache/quota coordinator and provider-appropriate licensing. No commercial deployment is included in Phase 1.
 
-The app uses no service-role key, fake login, localStorage session, or silent database fallback. Server Actions enforce authentication, validation, and framework origin protections. Workspace responses are dynamic and private. Basic frame, content-type, referrer, and permissions headers are supplied.
+## Product routes
 
-Remaining security work includes deployed session-expiry/revocation checks, real-project two-user testing, rate limits/quotas, CSP deployment policy, monitoring, and abuse controls. The illustrative alert history is not intended as a tamper-proof financial audit log: users with their publishable client access can insert their own RLS-owned rows.
+- / — public product landing, no fabricated market preview
+- /login — real cookie-based sign-in
+- /dashboard?symbol=... — coherent URL-selected Market Lens, watchlist, portfolio and recent activity
+- /research — provider-backed discovery
+- /research/[ticker] — safely encoded dynamic instrument research, including qualified symbols and currency pairs
+- /portfolio — saved holdings and real/cached USD valuation
+- /alerts — manual price/signal evaluation, editing, pause/resume and history
+- /settings — profile and account information
 
-## Demonstration market dataset
+Only label timestamps/market state supplied by the provider. The UI does not advertise all quotes as real-time. Daily bars may include the current session; their dates and observation ranges are visible.
 
-`tradex-demo-2026-09-09-v1` is a fixed, fictional snapshot dated September 9, 2026. It supports AAPL, NVDA, MSFT, AMZN, TSLA, META, GOOGL, JPM, JNJ, XOM, PG, and CAT.
+## Signals and calculations
 
-Each equity has 180 seeded weekday price observations, company/sector context, a quote, daily change, market-cap/volume-style values, seeded sentiment, and calculated annualized historical volatility. A ticker-specific deterministic generator produces repeatable history; the final close equals the shared current quote, and daily change is calculated from the preceding close. These weekdays are synthetic sessions, not an exchange-holiday calendar.
+Tradex Signal uses daily closes: five-session momentum (30%), twenty-session momentum (30%), price relative to its twenty-session average (20%), and twenty-vs-sixty-session average trend (20%). Factors are clipped to [-1,1]; weighted scores above 0.18 are bullish and below -0.18 bearish. Strength/agreement and annualized log-return volatility (252-session convention) produce a bounded 0–100 factor score. At least sixty observations are required. There is no sentiment input or probability-of-profit claim.
 
-Chart periods display approximately 1/3/6 months using 20/60/120 observations. Changing a timeframe changes the chart slice; the baseline model consistently uses the shared full history. Headlines are explicitly synthetic scenarios, not current reporting. No paid or live market API is connected.
+Saved acquisition costs remain unchanged. Current position value equals quantity times a valid USD quote. Missing or non-USD quotes leave that position unavailable; known market value is explicitly partial and full gain/loss is withheld. No missing quote becomes a zero-priced asset. Position allocation/concentration uses available values; sector/volatility risk estimates are withheld without verified inputs.
 
-## Signal methodology
+Manual alerts use fresh cached quotes and real-price technical signals. Stale/unavailable inputs are skipped. The existing unique (alert_rule_id,dataset_version) constraint is reused with a provider trading-day key, limiting each rule to one record per day. Editing or pause/resume cannot re-arm that day. Existing history remains stored; older demonstration evaluations are shown as archived records, not current market facts. Deleting a rule still cascades its own history.
 
-Weighted, clipped factors:
-- Five-session momentum: 25%.
-- Twenty-session momentum: 25%.
-- Price relative to its 20-session moving average: 20%.
-- Twenty-session vs. 60-session moving average: 20%.
-- Seeded sentiment from -1 to +1: 10%.
+## Persistence and security boundaries
 
-Weighted score greater than 0.18 indicates bullish, below -0.18 bearish, and otherwise neutral. A bounded 0–100 confidence heuristic combines factor strength/agreement and a historical-volatility penalty. It is **not** a calibrated probability or ML prediction. Driver labels and explanations are calculated from those same factors. The horizon is an illustrative 5–20 sessions; generation time is the fixed dataset timestamp.
+The existing migration, numeric checks, ownership policies, composite foreign keys and server action authentication remain intact. Phase 1 intentionally preserves the database's 12-symbol persistence constraint for watchlists, USD holdings and alerts: AAPL, NVDA, MSFT, AMZN, TSLA, META, GOOGL, JPM, JNJ, XOM, PG and CAT. Research/search is independent and not restricted to these symbols. Other instruments are research-only; foreign listings cannot be saved as their USD counterparts. Generalizing saved instruments requires a reviewed instrument-identity/currency migration in a later phase.
 
-## Portfolio methodology
+All mutations verify the current Supabase user and restrict ownership. No service-role key is required. Market keys use a server-side Authorization header, never browser query strings, localStorage or public environment variables. Provider failures return sanitized product messages; missing market configuration names TWELVE_DATA_API_KEY only in server development diagnostics.
 
-Current value = shares × shared demonstration quote. Cost basis = shares × average cost. Position and sector weights use current value; unrealized gain/loss uses the saved cost basis.
+Private environment files, browser profiles/storage state, screenshots, logs and build output are ignored. Never include them in a commit.
 
-Concentration = sum of squared fractional position weights × 100 (HHI). Diversification = 100 minus the average of position and sector HHI. Risk combines position HHI (35%), sector HHI (35%), and capped weighted historical volatility (30%). Higher diversification is preferable; higher risk/concentration means greater modeled exposure. Empty portfolios display unavailable scores rather than presenting zero risk as a recommendation.
+## Checkpoints and limits
 
-Flags identify single positions above 35%, sectors above 50%, heavy technology exposure, and weighted annualized volatility above 25%. Volatility is a weighted proxy, not a covariance-based portfolio estimate. No tax, brokerage, corporate action, currency, or execution model is supplied.
+Verified baseline: e004336c84a223f9eb6670182f5a36cb3f97eb70, pushed before Phase 1.
+Phase 1 branch: feat/premium-live-market-data. Do not commit, push or merge without explicit review approval.
 
-Holdings are unique per user/ticker. Fractional shares and nonnegative average cost are supported; edit the existing position to revise totals.
+The original 27 tests and deterministic fixture modules remain as baseline regression coverage. Active application components do not import the fictional market data. New provider tests use mock responses, never a real key or live API calls. See docs/PHASE1_REPORT.md for actual live/browser results; the earlier IMPLEMENTATION_STATUS.md records the baseline only.
 
-## Manual alerts
+A second real account with existing remote rows, session-expiry/revocation, commercial licensing, multi-instance quota coordination, public signup/recovery, billing, admin, notifications, continuous workers and live news remain outside this phase. Do not infer live two-account acceptance from the local SQL isolation suite.
 
-Rules cover price above/below, confidence above/below, and bullish/bearish signal state. Threshold comparisons are strict (`>` / `<`). Users create, edit conditions/thresholds, pause/resume, or delete rules and click **Evaluate demo alerts** to run them.
+## Provider references
 
-Evaluation uses the same quote and signal modules as research. Matches are persisted with a unique `(alert_rule_id, dataset_version)` constraint, and inserts ignore conflicts. This prevents duplicate history even across simultaneous evaluations. Repeated clicks, rule edits, and pause/resume do not manufacture changes in a fixed dataset. Signal rules record the initial matching state once per snapshot; continuous transition detection is future work. Deleting a rule also deletes its demo history, as stated in the confirmation.
-
-There is no background monitoring, stream, email, or push delivery. The UI shows the latest 50 saved triggers.
-
-## Validation and limitations
-
-`npm test` runs 27 checks including real SQL execution in embedded PostgreSQL (PGlite). The tests simulate only `auth.uid()` and database roles, then apply the actual migration. They test ownership isolation, foreign-key injection, invalid values, persistent rows, and alert deduplication. This is not a substitute for a real Supabase Auth/PostgREST acceptance run.
-
-See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for commands actually run, browser evidence, known limitations, and configuration still needed. Screenshots captured locally are under `output/playwright/` and are intentionally ignored by Git.
-
-## Deployment
-
-Use a Node-capable Next.js host such as your existing deployment platform:
-1. Deploy the **repository root**, not `frontend/`.
-2. Install with `npm ci`, build with `npm run build`, and run `npm start` where a start command is needed.
-3. Configure the two public Supabase variables before building. Public environment values are included at build time.
-4. Apply the migration to the intended Supabase project and set its Auth Site URL to the deployed HTTPS origin.
-5. Run the configured acceptance checklist and verify cookie refresh and ownership before a client demonstration.
-
-Static export is not supported because authentication and persistence require server execution. No site was deployed or pushed during this run.
-
-## Future production work
-
-Real licensed market data; validated/covariance-aware risk analytics; model evaluation and calibration; persistent quote/version ingestion; transition-aware alert scheduling and delivery; account provisioning/reset/recovery; integration/E2E tests against staging Supabase; observability, rate limits, resource quotas, backups, and migration rollback planning.
-
-No brokerage, trading, crypto, or autonomous-investing features are included.
-
-## Git ownership
-
-The verified remote is `git@github-tradex:kapoorabhi1939/Tradex-Ai-Stock-Trading-Portal.git`. Local author identity is `kapoorabhi1939 <kapoorabhi1939@gmail.com>`; SSH identified `kapoorabhi1939`.
-
-Do not push until the application work is reviewed. Before any future push, repeat the repository-local identity, remote, and `ssh -T github-tradex` checks. GitHub's successful SSH test returns status 1 because shell access is not provided; inspect the authenticated account message. No global Git settings or history were changed.
+[Authentication and error handling](https://twelvedata.com/docs/introduction/quickstart), [request batching](https://support.twelvedata.com/en/articles/5620512-how-to-create-a-request), [credit monitoring](https://support.twelvedata.com/en/articles/5713553-control-over-api-usage), [plan capabilities](https://twelvedata.com/pricing).

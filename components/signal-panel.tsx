@@ -1,54 +1,61 @@
-import { ArrowUpRight, ArrowDownRight, Info } from "lucide-react";
-import type { Equity } from "@/lib/demo-market";
-import { calculateSignal } from "@/lib/signals";
+import { ArrowUpRight, ArrowDownRight, Activity } from "lucide-react";
+import type { Signal } from "@/lib/signals";
 import { SignalBadge } from "./ui";
-export function SignalPanel({ equity }: { equity: Equity }) {
-  const signal = calculateSignal(equity);
+export function SignalPanel({ signal }: { signal: Signal | null }) {
   return (
     <section className="signal-panel">
       <div className="section-heading">
-        <h2>Signal intelligence</h2>
-        <span className="model-label">BASELINE v1</span>
+        <h2>Tradex Signal</h2>
+        <Activity size={18} />
       </div>
-      <div className="signal-summary">
-        <div>
-          <span className="stat-label">Decision-support signal</span>
-          <SignalBadge signal={signal.signal} />
+      {signal ? (
+        <>
+          <div className="signal-summary">
+            <SignalBadge signal={signal.signal} />
+            <div className="confidence-number">
+              {signal.confidence}
+              <span>
+                /100<small>factor score</small>
+              </span>
+            </div>
+          </div>
+          <div className="confidence-track">
+            <span style={{ width: signal.confidence + "%" }} />
+          </div>
+          <p className="signal-explanation">{signal.explanation}</p>
+          <div className="driver-heading">TECHNICAL FACTORS</div>
+          <ul className="drivers">
+            {signal.drivers.map((d) => (
+              <li key={d.label}>
+                <span className={d.value >= 0 ? "positive" : "negative"}>
+                  {d.value >= 0 ? (
+                    <ArrowUpRight size={16} />
+                  ) : (
+                    <ArrowDownRight size={16} />
+                  )}
+                </span>
+                <span>{d.label}</span>
+                <small>{Math.round(d.weight * 100)}%</small>
+              </li>
+            ))}
+          </ul>
+          <details className="methodology">
+            <summary>How the score works</summary>
+            <p>
+              Momentum and moving-average factors are weighted 30/30/20/20.
+              Historical volatility moderates the score. Calculated from daily
+              closing prices through {signal.generatedAt}. This is a technical
+              indicator, not a probability of profit.
+            </p>
+          </details>
+        </>
+      ) : (
+        <div className="signal-unavailable">
+          <Activity size={32} />
+          <h3>Waiting for price history</h3>
+          <p>A signal requires at least 60 valid daily observations.</p>
         </div>
-        <div className="confidence-number">
-          {signal.confidence}
-          <span>
-            %<small>confidence</small>
-          </span>
-        </div>
-      </div>
-      <div className="confidence-track">
-        <span style={{ width: `${signal.confidence}%` }} />
-      </div>
-      <p className="signal-explanation">{signal.explanation}</p>
-      <div className="driver-heading">WHAT’S DRIVING THE SIGNAL</div>
-      <ul className="drivers">
-        {signal.drivers.map((d) => (
-          <li key={d.label}>
-            <span className={d.value >= 0 ? "positive" : "negative"}>
-              {d.value >= 0 ? (
-                <ArrowUpRight size={16} />
-              ) : (
-                <ArrowDownRight size={16} />
-              )}
-            </span>
-            <span>{d.label}</span>
-            <small>{Math.round(d.weight * 100)}%</small>
-          </li>
-        ))}
-      </ul>
-      <div className="signal-foot">
-        <Info size={14} />
-        <span>
-          {signal.horizon}. Confidence is a heuristic score, not a probability
-          of profit.
-        </span>
-      </div>
+      )}
     </section>
   );
 }

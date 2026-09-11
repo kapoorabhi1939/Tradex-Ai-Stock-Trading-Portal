@@ -14,14 +14,15 @@ import {
   ArrowUpRight,
   ShieldCheck,
 } from "lucide-react";
+import { InstrumentSearch } from "./instrument-search";
 import { Brand, DemoBadge, Disclaimer } from "./ui";
 import { ActionForm } from "./action-form";
 import { signOut } from "@/app/actions/auth";
 const links = [
-  ["/dashboard", "Overview", LayoutDashboard],
-  ["/research", "Equity research", Search],
-  ["/portfolio", "My portfolio", ChartPie],
-  ["/alerts", "Alerts center", Bell],
+  ["/dashboard", "Dashboard", LayoutDashboard],
+  ["/research", "Research", Search],
+  ["/portfolio", "Portfolio", ChartPie],
+  ["/alerts", "Alerts", Bell],
   ["/settings", "Settings", Settings],
 ] as const;
 export function Shell({
@@ -48,6 +49,7 @@ export function Shell({
         ) ?? [],
       ).filter((el) => el.offsetParent !== null);
     focusable()[0]?.focus();
+    const focusFrame = requestAnimationFrame(() => focusable()[0]?.focus());
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
@@ -57,7 +59,10 @@ export function Shell({
       const elements = focusable(),
         first = elements[0],
         last = elements.at(-1);
-      if (event.shiftKey && document.activeElement === first) {
+      if (!sidebarRef.current?.contains(document.activeElement)) {
+        event.preventDefault();
+        first?.focus();
+      } else if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();
         last?.focus();
       } else if (!event.shiftKey && document.activeElement === last) {
@@ -71,6 +76,7 @@ export function Shell({
     document.addEventListener("keydown", onKeyDown);
     media.addEventListener("change", onResize);
     return () => {
+      cancelAnimationFrame(focusFrame);
       document.body.style.overflow = originalOverflow;
       document.removeEventListener("keydown", onKeyDown);
       media.removeEventListener("change", onResize);
@@ -161,17 +167,11 @@ export function Shell({
             >
               <Menu />
             </button>
-            <span className="breadcrumb">
-              Workspace <span>/</span>{" "}
-              <strong>
-                {links.find(([href]) => pathname.startsWith(href))?.[1] ??
-                  "Research"}
-              </strong>
-            </span>
+            <InstrumentSearch />
           </div>
           <div className="topbar-right">
             <DemoBadge />
-            <span className="snapshot-label">Snapshot · Sep 09, 2026</span>
+            <span className="snapshot-label">Your market workspace</span>
             <Link
               href="/alerts"
               className="icon-button"

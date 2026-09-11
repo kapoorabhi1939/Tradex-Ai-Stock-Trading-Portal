@@ -4,7 +4,7 @@ import { saveProfile } from "@/app/actions/workspace";
 import { signOut } from "@/app/actions/auth";
 import { ActionForm } from "@/components/action-form";
 import { PageHeading, Panel, SectionTitle, DemoBadge } from "@/components/ui";
-import { DATASET_VERSION } from "@/lib/demo-market";
+
 export const metadata = { title: "Settings" };
 export default async function Settings() {
   const data = await getWorkspace();
@@ -23,7 +23,7 @@ export default async function Settings() {
               <span className="avatar">{data.email[0]?.toUpperCase()}</span>
               <div>
                 <strong>{data.email}</strong>
-                <small>Authenticated with Supabase</small>
+                <small>Secure workspace account</small>
               </div>
             </div>
             <ActionForm
@@ -63,31 +63,31 @@ export default async function Settings() {
         </div>
         <div className="stack">
           <Panel>
-            <SectionTitle title="Data & methodology" />
+            <SectionTitle title="Market information" />
             <div className="settings-info">
               <Database size={21} />
               <div>
                 <DemoBadge />
                 <p>
-                  12 US equities with fixed, seeded price histories. Headlines
-                  and sentiment are synthetic.
+                  Quotes and daily price histories come from our connected
+                  market-data service. Availability and timing vary by
+                  instrument.
                 </p>
-                <code>{DATASET_VERSION}</code>
               </div>
             </div>
             <div className="settings-info">
               <ShieldCheck size={21} />
               <p>
-                Signals use weighted momentum, moving averages, and seeded
-                sentiment. Confidence is adjusted for historical volatility and
-                is not a calibrated probability.
+                Tradex Signal uses price momentum, moving-average trends and
+                historical volatility. The score is a technical indicator, not a
+                probability of profit.
               </p>
             </div>
           </Panel>
           <Panel>
             <SectionTitle
               title="About Tradex AI"
-              sub="Functional demonstration · Baseline model v1"
+              sub="Research and portfolio workspace"
             />
             <div className="settings-info">
               <Info size={21} />

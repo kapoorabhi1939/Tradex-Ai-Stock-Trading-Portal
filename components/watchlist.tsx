@@ -1,68 +1,59 @@
 import Link from "next/link";
-import { Plus, X } from "lucide-react";
-import { getEquity } from "@/lib/demo-market";
-import { calculateSignal } from "@/lib/signals";
-import { money } from "@/lib/format";
-import { addWatchlist, removeWatchlist } from "@/app/actions/workspace";
+import { X, ArrowUpRight } from "lucide-react";
+import type { QuoteMap } from "@/lib/market-data/types";
+import { removeWatchlist } from "@/app/actions/workspace";
 import { ActionForm } from "./action-form";
-import { TickerSelect } from "./ticker-select";
-import { Change, EmptyState, SignalBadge } from "./ui";
+import { Change, EmptyState } from "./ui";
+import { quotePrice, Freshness } from "./market-workspace";
 export function Watchlist({
   items,
+  quotes,
 }: {
   items: { id: string; ticker: string }[];
+  quotes: QuoteMap;
 }) {
-  return (
-    <>
-      <ActionForm
-        action={addWatchlist}
-        className="inline-form watchlist-add"
-        label={
-          <>
-            <Plus size={16} /> Add
-          </>
-        }
-      >
-        <TickerSelect />
-      </ActionForm>
-      {!items.length ? (
-        <EmptyState title="Make the market your own">
-          Add an equity to start following its price, calculated signal, and
-          research. Your watchlist stays with your account.
-        </EmptyState>
-      ) : (
-        <div className="watchlist-rows">
-          {items.map((item) => {
-            const e = getEquity(item.ticker);
-            if (!e) return null;
-            return (
-              <div className="watch-row" key={item.id}>
-                <Link href={`/research/${e.ticker}`} className="symbol-cell">
-                  <span className="ticker-icon">{e.ticker.slice(0, 1)}</span>
-                  <span>
-                    <strong>{e.ticker}</strong>
-                    <small>{e.name}</small>
-                  </span>
-                </Link>
-                <div className="watch-price">
-                  <strong>{money(e.price)}</strong>
-                  <Change value={e.change} />
-                </div>
-                <SignalBadge signal={calculateSignal(e).signal} />
-                <ActionForm
-                  action={removeWatchlist}
-                  label={<X size={14} />}
-                  accessibleLabel={`Remove ${e.ticker} from watchlist`}
-                  pendingLabel="…"
-                  buttonClass="icon-button subtle"
-                >
-                  <input type="hidden" name="id" value={item.id} />
-                </ActionForm>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </>
+  return items.length ? (
+    <div className="live-watchlist">
+      {items.map((item) => {
+        const result = quotes[item.ticker],
+          q = result?.data;
+        return (
+          <div className="watch-row" key={item.id}>
+            <Link href={"/research/" + encodeURIComponent(item.ticker)}>
+              <span className="symbol-mark">{item.ticker.slice(0, 2)}</span>
+              <span>
+                <strong>{item.ticker}</strong>
+                <small>{q?.name ?? "Saved instrument"}</small>
+              </span>
+              <ArrowUpRight size={14} />
+            </Link>
+            <div className="watch-price">
+              <strong>{q ? quotePrice(q) : "—"}</strong>
+              {q?.percentChange !== null && q?.percentChange !== undefined && (
+                <Change value={q.percentChange} />
+              )}{" "}
+              {result && <Freshness result={result} />}
+            </div>
+            <ActionForm
+              action={removeWatchlist}
+              label={<X size={14} />}
+              accessibleLabel={"Remove " + item.ticker}
+              buttonClass="icon-button"
+              pendingLabel="…"
+            >
+              <input type="hidden" name="id" value={item.id} />
+            </ActionForm>
+          </div>
+        );
+      })}
+    </div>
+  ) : (
+    <EmptyState
+      title="Follow your next idea"
+      href="/research"
+      link="Explore instruments"
+    >
+      Save an instrument from research to keep it close.
+    </EmptyState>
   );
 }

@@ -1,5 +1,5 @@
-import { getEquity } from "./demo-market";
-import { conditions, type Condition } from "./alerts";
+import { canSaveSymbol } from "./market-data/saved-symbols";
+import { conditions, type Condition } from "./alerts/model";
 export function textField(form: FormData, name: string, max = 100) {
   const value = form.get(name);
   if (typeof value !== "string" || value.length > max)
@@ -8,7 +8,7 @@ export function textField(form: FormData, name: string, max = 100) {
 }
 export function tickerField(form: FormData) {
   const ticker = textField(form, "ticker", 10).toUpperCase();
-  if (!getEquity(ticker)) throw new Error("Select a supported equity.");
+  if (!canSaveSymbol(ticker)) throw new Error("Select a supported equity.");
   return ticker;
 }
 export function numberField(

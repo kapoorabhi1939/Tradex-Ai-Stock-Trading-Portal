@@ -6,7 +6,7 @@ export const metadata: Metadata = {
     template: "%s | Tradex AI",
   },
   description:
-    "US equity research, explainable demonstration signals, and portfolio risk insights. Educational decision support.",
+    "Market research, explainable technical signals, and portfolio insights.",
 };
 export default function RootLayout({
   children,

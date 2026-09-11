@@ -23,7 +23,7 @@ export function Brand() {
 export function DemoBadge() {
   return (
     <span className="demo-badge">
-      <span /> Demo Data
+      <span /> Market research
     </span>
   );
 }
@@ -146,9 +146,8 @@ export function EmptyState({
 export function Disclaimer() {
   return (
     <p className="disclaimer">
-      Demonstration market data · Educational decision support. Signals and risk
-      scores are illustrative calculations, not investment advice or predictions
-      of returns.
+      Market information is for informational purposes and is not investment
+      advice.
     </p>
   );
 }

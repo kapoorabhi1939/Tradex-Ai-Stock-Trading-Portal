@@ -9,7 +9,7 @@ export default async function Alerts() {
       <PageHeading
         eyebrow="ALERTS / CONDITIONS THAT MATTER"
         title="Stay close to your thesis."
-        description="Save research conditions and evaluate them against the demonstration dataset."
+        description="Track price and technical conditions across your saved instruments."
       />
       <AlertsManager rules={data.rules} activity={data.activity} />
     </>

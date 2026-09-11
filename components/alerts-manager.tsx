@@ -1,7 +1,11 @@
 "use client";
 import { useState } from "react";
 import { Bell, Plus, Play, Pause, Trash2, Clock3, Pencil } from "lucide-react";
-import { conditions, type AlertRule, type TriggeredAlert } from "@/lib/alerts";
+import {
+  conditions,
+  type AlertRule,
+  type TriggeredAlert,
+} from "@/lib/alerts/model";
 import {
   createAlert,
   updateAlert,
@@ -45,7 +49,7 @@ export function AlertsManager({
             action={evaluateAlerts}
             label={
               <>
-                <Play size={15} /> Evaluate demo alerts
+                <Play size={15} /> Evaluate alerts
               </>
             }
             pendingLabel="Evaluating…"
@@ -126,7 +130,7 @@ export function AlertsManager({
             {!rules.length ? (
               <EmptyState title="Keep important conditions in view">
                 Create a price, confidence, or directional signal rule, then
-                evaluate it against the fixed demo snapshot.
+                evaluate it against the latest available market data.
               </EmptyState>
             ) : (
               <div className="rule-list">
@@ -186,7 +190,7 @@ export function AlertsManager({
                         accessibleLabel={`Delete ${rule.ticker} rule`}
                         pendingLabel="…"
                         buttonClass="icon-button danger"
-                        confirmMessage="Delete this rule and its associated demo history?"
+                        confirmMessage="Delete this rule and its associated history?"
                       >
                         <input type="hidden" name="id" value={rule.id} />
                       </ActionForm>
@@ -206,7 +210,7 @@ export function AlertsManager({
             {!activity.length ? (
               <EmptyState title="A quiet moment">
                 Matches appear here after you evaluate your rules. Try a
-                price-above threshold below an equity’s displayed demo price.
+                price-above threshold below an equity’s displayed market price.
               </EmptyState>
             ) : (
               <div className="timeline">
@@ -219,8 +223,17 @@ export function AlertsManager({
                       })}{" "}
                       UTC
                     </small>
-                    <h3>{item.ticker} · Condition matched</h3>
-                    <p>{item.message}</p>
+                    <h3>
+                      {item.ticker} ·{" "}
+                      {item.message.includes("Demo price")
+                        ? "Archived evaluation"
+                        : "Condition matched"}
+                    </h3>
+                    <p>
+                      {item.message.includes("Demo price")
+                        ? "Recorded before the current market-data connection."
+                        : item.message}
+                    </p>
                   </article>
                 ))}
               </div>
@@ -235,10 +248,9 @@ export function AlertsManager({
                 or push notifications run.
               </p>
               <p>
-                Signal rules detect the first matching state in this dataset.
-                Each rule records at most one match per fixed snapshot; repeated
-                evaluations, rule edits, and pause/resume do not create new
-                transitions.
+                Rules record at most one match per market-data day. Repeated
+                evaluations, edits and pause/resume do not create duplicate
+                history. Stale or unavailable inputs are skipped.
               </p>
             </div>
           </div>

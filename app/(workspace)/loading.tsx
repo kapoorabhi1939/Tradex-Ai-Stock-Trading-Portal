@@ -5,8 +5,8 @@ export default function Loading() {
       aria-label="Loading workspace"
       className="loading-layout"
     >
-      <div className="skeleton skeleton-title" />
-      <div className="skeleton skeleton-kpi" />
+      <div className="skeleton skeleton-heading" />
+      <div className="skeleton skeleton-card" />
       <div className="skeleton skeleton-chart" />
       <span className="muted">Loading your workspace…</span>
     </div>

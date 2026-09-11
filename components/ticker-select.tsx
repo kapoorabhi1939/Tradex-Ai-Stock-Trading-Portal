@@ -1,16 +1,12 @@
-import { equities } from "@/lib/demo-market";
-export function TickerSelect({
-  defaultValue = "AAPL",
-}: {
-  defaultValue?: string;
-}) {
+import { SAVED_SYMBOLS } from "@/lib/market-data/saved-symbols";
+export function TickerSelect({ defaultValue }: { defaultValue?: string }) {
   return (
     <label>
       Equity
-      <select name="ticker" defaultValue={defaultValue} required>
-        {equities.map((e) => (
-          <option key={e.ticker} value={e.ticker}>
-            {e.ticker} · {e.name}
+      <select name="ticker" defaultValue={defaultValue ?? "AAPL"}>
+        {SAVED_SYMBOLS.map((symbol) => (
+          <option key={symbol} value={symbol}>
+            {symbol}
           </option>
         ))}
       </select>

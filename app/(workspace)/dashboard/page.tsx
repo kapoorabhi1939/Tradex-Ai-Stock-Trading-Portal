@@ -1,147 +1,140 @@
 import Link from "next/link";
-import { ArrowUpRight, Bell, ShieldCheck } from "lucide-react";
 import { getWorkspace } from "@/lib/workspace";
-import { equities } from "@/lib/demo-market";
-import { analyzePortfolio } from "@/lib/portfolio";
-import { money } from "@/lib/format";
+import { getAsset, market } from "@/lib/market-data/provider";
+import { valuePortfolio } from "@/lib/market-data/analytics";
 import {
   Panel,
   PageHeading,
   SectionTitle,
   Stat,
   Change,
-  EmptyState,
 } from "@/components/ui";
-import { Sparkline } from "@/components/charts";
-import { DashboardChart } from "@/components/dashboard-chart";
+import { MarketWorkspace, quotePrice } from "@/components/market-workspace";
 import { Watchlist } from "@/components/watchlist";
-export const metadata = { title: "Overview" };
-export default async function Dashboard() {
-  const data = await getWorkspace();
-  const portfolio = analyzePortfolio(data.holdings);
-  const name = data.displayName || data.email.split("@")[0];
+import { money } from "@/lib/format";
+import { symbolKey } from "@/lib/market-data/normalizers";
+export const metadata = { title: "Dashboard" };
+export default async function Dashboard({
+  searchParams,
+}: {
+  searchParams: Promise<{ symbol?: string }>;
+}) {
+  const data = await getWorkspace(),
+    params = await searchParams;
+  let selected = "AAPL";
+  try {
+    selected = symbolKey(params.symbol ?? "AAPL");
+  } catch {}
+  const symbols = [
+    ...new Set([
+      selected,
+      ...data.watchlist.map((i) => i.ticker),
+      ...data.holdings.map((h) => h.ticker),
+    ]),
+  ];
+  const [asset, quotes] = await Promise.all([
+      getAsset(selected),
+      market.quotes(symbols),
+    ]),
+    portfolio = valuePortfolio(data.holdings, quotes);
   return (
     <>
       <PageHeading
-        eyebrow="YOUR MARKET, IN PERSPECTIVE"
-        title={`Welcome back, ${name}.`}
-        description="A clearer view of the companies you follow and the risks you hold."
-      >
-        <Link className="button secondary" href="/research">
-          Explore equities <ArrowUpRight size={16} />
-        </Link>
-      </PageHeading>
+        eyebrow="YOUR WORKSPACE"
+        title="Market overview"
+        description="A focused view of your markets, positions and next move."
+      />
       <div className="market-ribbon">
-        {equities.slice(0, 4).map((e) => (
-          <Link
-            href={`/research/${e.ticker}`}
-            className="market-tile"
-            key={e.ticker}
-          >
-            <div>
+        {symbols.slice(0, 5).map((s) => {
+          const q = quotes[s]?.data;
+          return (
+            <Link
+              prefetch={false}
+              href={"/dashboard?symbol=" + encodeURIComponent(s)}
+              className={"market-tile" + (s === selected ? " selected" : "")}
+              key={s}
+            >
               <span>
-                {e.ticker}
-                <small>{e.sector}</small>
+                {q?.symbol ?? s}
+                <small>{q?.name ?? "Market data unavailable"}</small>
               </span>
-              <Sparkline bars={e.bars} positive={e.change >= 0} />
-            </div>
-            <div>
-              <strong>{money(e.price)}</strong>
-              <Change value={e.change} />
-            </div>
-          </Link>
-        ))}
+              <div>
+                <strong>{q ? quotePrice(q) : "—"}</strong>
+                {q?.percentChange !== null &&
+                  q?.percentChange !== undefined && (
+                    <Change value={q.percentChange} />
+                  )}
+              </div>
+            </Link>
+          );
+        })}
       </div>
-      <DashboardChart />
+      <MarketWorkspace
+        asset={asset}
+        lens
+        saved={data.watchlist.some(
+          (i) => i.ticker === asset.quote.data?.symbol,
+        )}
+      />
       <div className="lower-grid">
         <Panel>
           <SectionTitle
-            title="Your watchlist"
-            sub={`${data.watchlist.length} equities · Saved to your account`}
+            title="Watchlist"
+            sub={data.watchlist.length + " saved instruments"}
             href="/research"
             link="Discover"
           />
-          <Watchlist items={data.watchlist} />
+          <Watchlist items={data.watchlist} quotes={quotes} />
         </Panel>
         <div className="stack">
           <Panel>
             <SectionTitle
-              title="Portfolio at a glance"
+              title="Portfolio snapshot"
               href="/portfolio"
-              link="Analyze"
+              link="View positions"
             />
-            {portfolio.total ? (
-              <>
-                <div className="stats-row two">
-                  <Stat
-                    label="Demo market value"
-                    value={money(portfolio.total)}
-                    detail={`${data.holdings.length} positions`}
-                  />
-                  <Stat
-                    label="Risk indicator"
-                    value={
-                      <>
-                        {portfolio.risk}
-                        <small>/100</small>
-                      </>
-                    }
-                    detail="Higher means more risk"
-                  />
-                </div>
-                <div className="insight-note">
-                  <ShieldCheck size={18} />
-                  <p>
-                    {portfolio.flags[0] ??
-                      "Your holdings span multiple exposures. Keep reviewing concentration as allocations change."}
-                  </p>
-                </div>
-              </>
-            ) : (
-              <EmptyState
-                title="See the whole picture"
-                href="/portfolio"
-                link="Add your first holding"
-              >
-                Build a portfolio to reveal allocation, concentration, and risk
-                indicators.
-              </EmptyState>
-            )}
+            <div className="stats-row two">
+              <Stat
+                label={
+                  portfolio.partial ? "Priced positions only" : "Current value"
+                }
+                value={money(portfolio.knownValue)}
+                detail={
+                  portfolio.pricedCount +
+                  " of " +
+                  data.holdings.length +
+                  " positions priced"
+                }
+              />
+              <Stat
+                label="Cost basis"
+                value={money(portfolio.cost)}
+                detail="Your saved acquisition costs"
+              />
+            </div>
           </Panel>
           <Panel>
             <SectionTitle
-              title="Alert activity"
-              sub={`${data.rules.filter((r) => r.enabled).length} enabled rules · Manual evaluation`}
+              title="Recent activity"
               href="/alerts"
+              link="Alerts"
             />
             {data.activity.length ? (
-              <div className="activity-compact">
-                {data.activity.slice(0, 2).map((a) => (
-                  <div key={a.id}>
-                    <Bell size={16} />
-                    <p>
-                      {a.message}
-                      <small>
-                        {new Date(a.triggered_at).toLocaleString("en-US", {
-                          timeZone: "UTC",
-                        })}{" "}
-                        UTC
-                      </small>
-                    </p>
-                  </div>
-                ))}
-              </div>
+              data.activity.slice(0, 2).map((a) => (
+                <div className="activity-entry" key={a.id}>
+                  <strong>{a.ticker} · Condition matched</strong>
+                  <p>
+                    {new Date(a.triggered_at).toLocaleString("en-US", {
+                      timeZone: "UTC",
+                    })}{" "}
+                    UTC
+                  </p>
+                </div>
+              ))
             ) : (
-              <div className="quiet-state">
-                <Bell size={20} />
-                <p>
-                  No triggered alerts yet.
-                  <br />
-                  <Link href="/alerts">
-                    Create a rule and evaluate the demo snapshot.
-                  </Link>
-                </p>
-              </div>
+              <p className="muted">
+                No alert activity yet. Create a rule to track a price or signal.
+              </p>
             )}
           </Panel>
         </div>
