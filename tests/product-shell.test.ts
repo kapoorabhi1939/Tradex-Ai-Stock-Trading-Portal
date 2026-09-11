@@ -242,3 +242,12 @@ test("account email presentation masks the local part", async () => {
   assert.equal(maskedEmail("demo@tradexai.com"), "d•••@tradexai.com");
   assert.equal(maskedEmail("invalid"), "Signed-in account");
 });
+
+test("admin routes remain server-gated by the shared authorization helper", () => {
+  const layout = readFileSync(
+    new URL("../app/admin/layout.tsx", import.meta.url),
+    "utf8",
+  );
+  assert.match(layout, /isAdminEmail\(user\.email\)/);
+  assert.match(layout, /redirect\("\/dashboard\?notice=admin-required"\)/);
+});

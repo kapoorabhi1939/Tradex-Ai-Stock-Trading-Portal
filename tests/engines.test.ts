@@ -13,7 +13,9 @@ import {
   alertFields,
   numberField,
   tickerField,
+  loginDestination,
   safeDestination,
+  safeLoginRequest,
 } from "../lib/validation";
 const holding = (ticker: string, shares = 10, average_cost = 100): Holding => ({
   id: ticker,
@@ -241,4 +243,22 @@ test("login redirect only accepts local application routes", () => {
   ])
     assert.equal(safeDestination(url), "/dashboard");
   assert.equal(safeDestination("/research/NVDA"), "/research/NVDA");
+});
+
+test("login destination sends admins to admin and users to dashboard", () => {
+  assert.equal(loginDestination(undefined, true), "/admin");
+  assert.equal(loginDestination(undefined, false), "/dashboard");
+});
+
+test("login destination preserves safe requests without bypassing admin", () => {
+  assert.equal(
+    safeLoginRequest("/markets?view=watchlist"),
+    "/markets?view=watchlist",
+  );
+  assert.equal(loginDestination("/research/NVDA", true), "/research/NVDA");
+  assert.equal(loginDestination("/portfolio", false), "/portfolio");
+  assert.equal(loginDestination("/admin", false), "/dashboard");
+  assert.equal(loginDestination("/admin/users", false), "/dashboard");
+  assert.equal(loginDestination("/admin/users", true), "/admin/users");
+  assert.equal(safeLoginRequest("https://evil.example/admin"), "");
 });

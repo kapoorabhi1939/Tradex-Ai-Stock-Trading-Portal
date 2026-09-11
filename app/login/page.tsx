@@ -6,7 +6,7 @@ import { ActionForm } from "@/components/action-form";
 import { signIn } from "@/app/actions/auth";
 import { supabaseConfigured } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
-import { safeDestination } from "@/lib/validation";
+import { safeDestination, safeLoginRequest } from "@/lib/validation";
 export const metadata = { title: "Sign in" };
 export default async function Login({
   searchParams,
@@ -87,7 +87,7 @@ export default async function Login({
             <input
               type="hidden"
               name="next"
-              value={safeDestination(params.next)}
+              value={safeLoginRequest(params.next)}
             />
             <label>
               Email address

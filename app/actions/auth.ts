@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { supabaseConfigured } from "@/lib/supabase/config";
 import { validateSignup } from "@/lib/signup";
-import { safeDestination } from "@/lib/validation";
+import { isAdminEmail } from "@/lib/admin";
+import { loginDestination } from "@/lib/validation";
 
 export type FormState = { error?: string; success?: string };
 
@@ -38,6 +39,7 @@ export async function signIn(_: FormState, form: FormData): Promise<FormState> {
     password.length > 256
   )
     return { error: "Enter a valid email address and password." };
+  let destination = "/dashboard";
   try {
     const db = await createClient();
     const { data, error } = await db.auth.signInWithPassword({
@@ -58,13 +60,17 @@ export async function signIn(_: FormState, form: FormData): Promise<FormState> {
           : "";
       await ensureProfile(db, data.user.id, displayName);
     }
+    destination = loginDestination(
+      form.get("next"),
+      isAdminEmail(data.user?.email),
+    );
   } catch {
     return {
       error: "Unable to reach authentication. Please try again shortly.",
     };
   }
   revalidatePath("/", "layout");
-  redirect(safeDestination(form.get("next")));
+  redirect(destination);
 }
 
 export async function signUp(_: FormState, form: FormData): Promise<FormState> {

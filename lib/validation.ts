@@ -57,3 +57,22 @@ export function safeDestination(value: unknown) {
     return "/dashboard";
   return value;
 }
+
+export function safeLoginRequest(value: unknown) {
+  if (
+    typeof value !== "string" ||
+    !/^\/(dashboard|markets|research|portfolio|alerts|insights|settings|admin)(\/|\?|$)/.test(
+      value,
+    ) ||
+    /[\\\r\n]/.test(value)
+  )
+    return "";
+  return value;
+}
+
+export function loginDestination(value: unknown, admin: boolean) {
+  const requested = safeLoginRequest(value);
+  if (requested.startsWith("/admin")) return admin ? requested : "/dashboard";
+  if (requested) return requested;
+  return admin ? "/admin" : "/dashboard";
+}
